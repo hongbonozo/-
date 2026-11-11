@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0E3D5C">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>한눈에 쏙 서울교육행정달력</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Poppins:wght@800&display=swap">
+<style>
+:root{
+  --navy:#0E3D5C; --navy2:#1F5578; --ink:#1B2A38; --sub:#5E6B78; --line:#E6DFD3; --bg:#F8F4EE; --paper:#FFFDF9; --today:#FCEFC9;
+  --red2:#E14F3A; --yellow:#F0B92E; --blue2:#4865B0; --wkbg:#EEF1F2;
+  --c관리자:#7030A0; --c시설:#0070C0; --c세입:#E46C0A; --c지출:#00A040; --c급여:#E8358E; --c기타:#808080;
+  --red:#E14F3A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);font-size:15px;display:flex;flex-direction:column}
+button{font:inherit;cursor:pointer}
+/* header */
+header{background:var(--bg);color:var(--navy);display:flex;align-items:center;gap:14px;padding:10px 18px 10px;flex-wrap:wrap;position:relative;border-bottom:1px solid var(--line)}
+header::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--navy) 0 25%,var(--red2) 25% 50%,var(--yellow) 50% 75%,var(--blue2) 75%)}
+.brand{display:flex;align-items:center;gap:10px;padding-top:2px}
+.yr{font-family:Poppins,sans-serif;font-weight:800;font-size:26px;letter-spacing:-1px;line-height:1}
+.yr b:nth-child(1){color:var(--navy)}.yr b:nth-child(2){color:var(--red2)}.yr b:nth-child(3){color:var(--yellow)}.yr b:nth-child(4){color:var(--blue2)}
+.bt{display:flex;flex-direction:column;line-height:1.15}.bt strong{font-size:18px;font-weight:900;letter-spacing:-.4px}.bt span{font-size:12px;color:var(--sub)}
+.brand svg{flex:none}
+.nav{display:flex;align-items:center;gap:6px;margin-left:8px}
+.nav button{background:var(--navy);border:0;color:#fff;border-radius:999px;padding:6px 12px}
+.nav button:hover{background:var(--navy2)}
+.nav select{font:inherit;font-weight:900;font-size:17px;border:1.5px solid var(--navy);border-radius:999px;padding:4px 10px;background:var(--paper);color:var(--navy)}
+.search{margin-left:auto;position:relative}
+.search input{font:inherit;width:240px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 12px 7px 32px}
+.search svg{position:absolute;left:9px;top:9px}
+.hbtn{background:transparent;border:1.5px solid var(--navy);color:var(--navy);border-radius:999px;padding:5px 12px;font-weight:700}
+.hbtn:hover{background:var(--navy);color:#fff}
+/* sub bar */
+.subbar{display:flex;align-items:center;gap:10px;padding:8px 18px;background:var(--bg);flex-wrap:wrap}
+.meta{display:flex;gap:12px;align-items:center;color:var(--sub);font-size:14px}
+.meta b{color:var(--ink)}
+.notice{background:#fff;border:1px solid var(--line);color:var(--navy);border-radius:6px;padding:4px 10px;font-size:13.5px;max-width:640px}
+.notice[contenteditable]:focus{outline:2px solid var(--navy2)}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 11px 4px 8px;font-size:13.5px;display:flex;align-items:center;gap:6px;color:var(--ink)}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.chip.off{opacity:.38;text-decoration:line-through}
+.chip.mine.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+/* layout */
+main{flex:1;display:flex;min-height:0}
+.cal{flex:1;display:flex;flex-direction:column;min-width:0;padding:10px 12px 12px 18px}
+.dow{display:grid;grid-template-columns:var(--cols);font-size:13px;font-weight:700;color:var(--sub);padding:0 0 4px}
+.dow div{padding:0 8px}
+.dow .sun{color:var(--red)} .dow .sat{color:var(--blue2)} .dow .wkh{color:var(--navy)}
+.cal{--cols:minmax(150px,1.2fr) minmax(0,.7fr) repeat(5,minmax(0,1fr)) minmax(0,.7fr)}
+.grid{flex:1;display:grid;grid-template-columns:var(--cols);grid-auto-rows:1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-height:0}
+.cell{background:var(--paper);padding:5px 6px 4px;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden}
+.cell.out{background:#F6F2EA}
+.cell.wkc{background:var(--wkbg);border-right:2px solid var(--navy)}
+.wkl{font-size:12px;font-weight:700;color:var(--navy)}
+.wkd{font-size:11px;color:var(--sub)}
+.cell.out .dnum{color:#b6bcc7}
+.cell.today{background:var(--today)}
+.cell.drop{outline:2px dashed var(--navy2);outline-offset:-3px}
+.chead{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.dnum{font-weight:700;font-size:14px}
+.cell.sunc .dnum,.cell.hol .dnum{color:var(--red)}
+.cell.satc .dnum{color:var(--blue2)}
+.hname{font-size:12px;color:var(--red);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.add{margin-left:auto;border:0;background:none;color:#9aa3b2;font-size:17px;line-height:1;padding:0 3px;opacity:0}
+.cell:hover .add{opacity:1}
+.items{display:flex;flex-direction:column;gap:2px;min-height:0;overflow:hidden}
+.it{display:flex;gap:5px;align-items:flex-start;font-size:13px;line-height:1.3;padding:2px 4px 2px 5px;border-radius:4px;border-left:3px solid var(--c);cursor:pointer;background:color-mix(in srgb,var(--c) 6%,#fff)}
+.it:hover{background:color-mix(in srgb,var(--c) 14%,#fff)}
+.it .tag{flex:none;font-size:10.5px;font-weight:700;color:var(--c);margin-top:1px}
+.it .tx{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.it.done{opacity:.45}.it.done .tx{text-decoration:line-through}
+.it.edited .tx::after{content:" ✎";color:#8a93a3;font-size:11px}
+.it.weekly{background:#fff}
+.more{font-size:12.5px;color:var(--navy2);border:0;background:none;text-align:left;padding:2px 4px;font-weight:700}
+/* side */
+aside{width:300px;flex:none;border-left:1px solid var(--line);background:var(--paper);overflow:auto;padding:12px 14px}
+aside h3{font-size:14px;margin:16px 0 6px;color:var(--navy);font-weight:900;display:flex;align-items:center;gap:6px}
+aside h3:first-child{margin-top:2px}
+aside .cnt{font-size:12px;color:var(--sub);font-weight:500}
+.sl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.sl li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;padding:5px 6px;border-radius:6px;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 5%,#fff)}
+.sl li input{margin-top:3px;accent-color:var(--navy)}
+.sl li .t{flex:1;cursor:pointer}
+.sl li.done .t{text-decoration:line-through;opacity:.5}
+.sl .dd{flex:none;font-size:11.5px;font-weight:700;color:#fff;background:var(--navy);border-radius:4px;padding:1px 5px;margin-top:2px}
+.sl .dd.d0{background:var(--red)}
+.empty{color:var(--sub);font-size:13px;padding:4px 2px}
+.sidenote{font-size:12.5px;color:var(--sub);background:var(--bg);border-radius:6px;padding:8px;margin-top:4px}
+/* dialogs */
+.scrim{position:fixed;inset:0;background:rgba(20,28,45,.42);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.scrim.on{display:flex}
+.dlg{background:var(--paper);border-radius:14px;width:min(540px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.dlg h2{margin:0;font-size:17px;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.dlg .x{margin-left:auto;border:0;background:none;font-size:22px;color:var(--sub);line-height:1}
+.dlg .bd{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.dlg label{font-size:13px;font-weight:700;color:var(--sub);display:flex;flex-direction:column;gap:5px}
+.dlg input[type=text],.dlg input[type=date],.dlg textarea,.dlg select{font:inherit;border:1px solid #cfd5df;border-radius:7px;padding:8px 10px;color:var(--ink);font-weight:400}
+.dlg textarea{resize:vertical;min-height:64px}
+.row{display:flex;gap:12px}.row>*{flex:1}
+.cats{display:flex;gap:6px;flex-wrap:wrap}
+.cats button{border:1.5px solid var(--c);color:var(--c);background:#fff;border-radius:999px;padding:4px 12px;font-size:13.5px;font-weight:700}
+.cats button.sel{background:var(--c);color:#fff}
+.ft{display:flex;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line);align-items:center;flex-wrap:wrap}
+.btn{border:1px solid #cfd5df;background:#fff;border-radius:7px;padding:8px 14px;color:var(--ink)}
+.btn{border-radius:999px!important}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:700}
+.btn.danger{color:var(--red);border-color:#f0c4c8}
+.btn.ghost{border-color:transparent;color:var(--sub)}
+.orig{font-size:12.5px;color:var(--sub);background:var(--bg);border-radius:6px;padding:8px 10px}
+.chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--ink)!important}
+.dl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.dl li{padding:6px 8px;border-left:3px solid var(--c);border-radius:5px;background:color-mix(in srgb,var(--c) 6%,#fff);cursor:pointer;font-size:14px}
+.dl li small{color:var(--sub);display:block;font-size:12px}
+/* list view */
+.list{display:none;flex:1;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 16px 12px}
+.cal.listmode .dow,.cal.listmode .grid{display:none}
+.cal.listmode .list{display:block}
+.lh{font-weight:900;color:var(--navy);margin:14px 0 4px;font-size:14px;border-bottom:1px solid var(--line);padding-bottom:3px}
+.lh.hol{color:var(--red)}
+.lr{display:flex;gap:8px;align-items:flex-start;padding:4px 6px;border-left:3px solid var(--c);margin:2px 0;font-size:14px;border-radius:4px}
+.lr:hover{background:color-mix(in srgb,var(--c) 8%,#fff)}
+.lr .tag{font-size:11px;font-weight:700;color:var(--c);margin-top:2px;flex:none;width:34px}
+.lr .t{flex:1;cursor:pointer}.lr .t small{color:var(--sub);display:block}
+.lr.done .t{text-decoration:line-through;opacity:.5}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{height:auto!important}
+  body{display:block;background:#fff;font-size:9pt}
+  .nav button,.search,.hbtn,.chips,aside,.install,.toast,.nbar,.add,.scrim{display:none!important}
+  header{padding:4px 0}.subbar{padding:2px 0;background:#fff}
+  .nav select{border:0;appearance:none;-webkit-appearance:none;font-size:13pt;background:none}
+  main{display:block}.cal{display:block;padding:0}
+  .grid{grid-template-rows:none!important;grid-auto-rows:auto!important;overflow:visible;border-radius:0;background:#fff;gap:0;border:0}
+  .cell{overflow:visible;min-height:20mm;break-inside:avoid;padding:2px 3px;border:.4pt solid #cfc8bb}
+  .items{overflow:visible}
+  .it{font-size:7.5pt;line-height:1.2;padding:1px 2px 1px 3px;break-inside:avoid}
+  .it .tx{display:block;-webkit-line-clamp:unset}
+  .it .tag{font-size:6.5pt}
+  .list{overflow:visible;border:0}
+}
+/* notices */
+.nbar{display:flex;flex-direction:column;gap:4px;padding:0 18px 6px}
+.nb{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-left:5px solid var(--navy);border-radius:10px;padding:7px 12px;font-size:13.5px}
+.nb.imp{border-left-color:var(--red2);background:#FDF0EC}
+.nb b{color:var(--navy);flex:none}.nb.imp b{color:var(--red2)}
+.nb span{flex:1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nb button{border:0;background:none;color:var(--sub);font-size:12.5px}
+.upd{white-space:pre-wrap;font-size:13.5px;line-height:1.65;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;max-height:46vh;overflow:auto}
+/* toast */
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#1d2433;color:#fff;border-radius:8px;padding:10px 14px;display:none;gap:14px;align-items:center;z-index:60;font-size:14px}
+.toast.on{display:flex}
+.toast button{background:none;border:0;color:#8fc1ff;font-weight:700}
+/* install card */
+.install{position:fixed;right:18px;bottom:18px;width:330px;background:var(--paper);border-top:4px solid var(--red2)!important;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:14px 16px;z-index:40;font-size:13.5px;display:none}
+.install.on{display:block}
+.install h4{margin:0 0 6px;font-size:15px;color:var(--navy)}
+.install ol{margin:6px 0 10px;padding-left:18px;line-height:1.6}
+@media (max-width:1100px){aside{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="yr" aria-hidden="true"><b>2</b><b>0</b><b>2</b><b>7</b></span>
+    <span class="bt"><strong>한눈에 쏙 서울교육행정달력</strong><span>학교행정 업무달력</span></span>
+  </div>
+  <div class="nav">
+    <button id="prev" title="이전 달 (←)">◀</button>
+    <select id="msel" aria-label="달 선택"></select>
+    <button id="next" title="다음 달 (→)">▶</button>
+    <button id="todayBtn" title="오늘 (T)">오늘</button>
+  </div>
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5E6B78" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="text" placeholder="업무 검색 (Ctrl+F)">
+  </div>
+  <button class="hbtn" id="viewBtn" title="달력/목록 바꾸기">목록</button>
+  <button class="hbtn" id="printBtn">인쇄</button>
+  <button class="hbtn" id="backupBtn">백업·내보내기</button>
+</header>
+<div class="subbar">
+  <div class="meta"><span>근무일수 <b id="wd" contenteditable="true" spellcheck="false"></b>일</span></div>
+  <div class="notice" id="notice" contenteditable="true" spellcheck="false" title="클릭해서 월별 안내를 수정할 수 있습니다"></div>
+  <div class="chips" id="chips"></div>
+</div>
+<div class="nbar" id="nbar"></div>
+<main>
+  <section class="cal">
+    <div class="dow"><div class="wkh">주간 확인</div><div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div></div>
+    <div class="grid" id="grid"></div>
+    <div class="list" id="list"></div>
+  </section>
+  <aside id="side"></aside>
+</main>
+
+<div class="scrim" id="editScrim"><div class="dlg" role="dialog" aria-modal="true">
+  <h2 id="edTitle">업무 수정<button class="x" data-close>×</button></h2>
+  <div class="bd">
+    <label>업무<input type="text" id="fTitle"></label>
+    <label>세부 내용<input type="text" id="fDetail" placeholder="(선택)"></label>
+    <div class="row">
+      <label>날짜<input type="date" id="fDate" min="2026-12-27" max="2028-03-04"></label>
+      <label class="chk" style="align-self:end;padding-bottom:8px"><input type="checkbox" id="fWeekly"> 주간 확인 사항</label>
+    </div>
+    <label>분야<div class="cats" id="fCats"></div></label>
+    <label>메모<textarea id="fMemo" placeholder="나만 보는 메모 (예: 담당자, 공문번호)"></textarea></label>
+    <label class="chk"><input type="checkbox" id="fDone"> 완료</label>
+    <div class="orig" id="fOrig" hidden></div>
+  </div>
+  <div class="ft">
+    <button class="btn danger" id="fDel">삭제</button>
+    <button class="btn ghost" id="fReset" hidden>원래 내용으로 되돌리기</button>
+    <span style="flex:1"></span>
+    <button class="btn" data-close>취소</button>
+    <button class="btn pri" id="fSave">저장</button>
+  </div>
+</div></div>
+
+<div class="scrim" id="listScrim"><div class="dlg" role="dialog" aria-modal="true">
+  <h2><span id="lsTitle"></span><button class="x" data-close>×</button></h2>
+  <div class="bd"><ul class="dl" id="lsList"></ul></div>
+  <div class="ft" id="lsFt"><span style="flex:1"></span><button class="btn pri" id="lsAdd">+ 업무 추가</button></div>
+</div></div>
+
+<div class="scrim" id="bkScrim"><div class="dlg" role="dialog" aria-modal="true">
+  <h2>백업·내보내기<button class="x" data-close>×</button></h2>
+  <div class="bd">
+    <div class="orig">내가 고친 내용은 이 컴퓨터의 브라우저에만 저장됩니다. 브라우저 기록(쿠키 및 사이트 데이터)을 지우거나 PC를 바꾸기 전에 꼭 백업 파일을 저장해 두세요.</div>
+    <div class="row"><button class="btn pri" id="bkSave">백업 파일 저장</button><label class="btn" style="text-align:center;font-weight:400;color:var(--ink);font-size:inherit;display:block;cursor:pointer">백업 파일 불러오기<input type="file" id="bkFile" accept=".json" hidden></label></div>
+    <div class="row"><button class="btn" id="bkXlsx">엑셀(.xlsx)로 내보내기</button><button class="btn danger" id="bkReset">전체 초기화(원본 달력으로)</button></div>
+    <div class="orig" id="bkMsg" hidden></div>
+    <div style="font-size:12px;color:var(--sub)" id="verInfo"></div>
+  </div>
+</div></div>
+
+<div class="scrim" id="updScrim"><div class="dlg" role="dialog" aria-modal="true">
+  <h2>새 원본 일정이 있습니다<button class="x" data-close>×</button></h2>
+  <div class="bd"><div style="font-size:13.5px;color:var(--sub)" id="updVer"></div><div class="upd" id="updBody"></div>
+  <div class="orig">내가 고치거나 추가한 업무, 완료 표시, 메모는 그대로 유지됩니다.</div></div>
+  <div class="ft"><span style="flex:1"></span><button class="btn pri" data-close>확인</button></div>
+</div></div>
+
+<div class="scrim" id="ntScrim"><div class="dlg" role="dialog" aria-modal="true">
+  <h2 id="ntTitle">공지<button class="x" data-close>×</button></h2>
+  <div class="bd"><div class="upd" id="ntBody"></div></div>
+  <div class="ft"><span style="flex:1"></span><button class="btn pri" data-close>닫기</button></div>
+</div></div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastUndo">실행 취소</button></div>
+
+<div class="install" id="install">
+  <h4>바탕화면에 설치해서 쓰세요</h4>
+  <ol>
+    <li><b>Edge</b>: 주소창 오른쪽 <b>앱 설치</b> 아이콘 → 설치</li>
+    <li><b>Chrome</b>: 오른쪽 위 ⋮ → <b>저장 및 공유</b> → <b>페이지를 앱으로 설치</b></li>
+  </ol>
+  <div style="color:var(--sub);font-size:12.5px;margin-bottom:8px">설치하면 바탕화면 아이콘으로 바로 열리고, 인터넷이 끊겨도 쓸 수 있습니다.</div>
+  <button class="btn pri" id="instGo" hidden>지금 설치</button> <button class="btn" id="instClose">닫기</button>
+</div>
+
+<script id="seed" type="application/json">{"version":"2027-2028.1","months":[{"year":2027,"month":1,"workDays":20,"notice":"• 소방종합정밀점검(건축물 사용승인일이 속하는 달) / • 작동기능점검(종합정밀점검 받은 달부터 6개월이 되는 달)"},{"year":2027,"month":2,"workDays":18,"notice":""},{"year":2027,"month":3,"workDays":22,"notice":"*학교운영위원회 구성 절차 학교 사정에 맞게 세부절차 제정(학부모 총회 일정 확인)"},{"year":2027,"month":4,"workDays":22,"notice":""},{"year":2027,"month":5,"workDays":18,"notice":""},{"year":2027,"month":6,"workDays":22,"notice":""},{"year":2027,"month":7,"workDays":21,"notice":""},{"year":2027,"month":8,"workDays":21,"notice":""},{"year":2027,"month":9,"workDays":19,"notice":""},{"year":2027,"month":10,"workDays":19,"notice":""},{"year":2027,"month":11,"workDays":22,"notice":""},{"year":2027,"month":12,"workDays":22,"notice":""},{"year":2028,"month":1,"workDays":18,"notice":""},{"year":2028,"month":2,"workDays":21,"notice":""}],"holidays":[{"date":"2027-01-01","name":"새해 첫날"},{"date":"2027-02-06","name":"설날 연휴"},{"date":"2027-02-07","name":"설날"},{"date":"2027-02-08","name":"설날 연휴"},{"date":"2027-02-09","name":"대체 휴일"},{"date":"2027-03-01","name":"삼일절"},{"date":"2027-04-05","name":"식목일"},{"date":"2027-05-01","name":"노동절"},{"date":"2027-05-03","name":"대체 휴일"},{"date":"2027-05-05","name":"어린이날"},{"date":"2027-05-13","name":"석가탄신일"},{"date":"2027-06-06","name":"현충일"},{"date":"2027-07-17","name":"제헌절"},{"date":"2027-07-19","name":"대체 휴일"},{"date":"2027-08-15","name":"광복절"},{"date":"2027-08-16","name":"대체 휴일"},{"date":"2027-09-14","name":"추석연휴"},{"date":"2027-09-15","name":"추석"},{"date":"2027-09-16","name":"추석연휴"},{"date":"2027-10-03","name":"개천절"},{"date":"2027-10-04","name":"대체 휴일"},{"date":"2027-10-09","name":"한글날"},{"date":"2027-10-11","name":"대체 휴일"},{"date":"2027-12-25","name":"크리스마스"},{"date":"2027-12-27","name":"대체 휴일"},{"date":"2028-01-01","name":"새해 첫날"},{"date":"2028-01-26","name":"설날 연휴"},{"date":"2028-01-27","name":"설 날(음 1.1.)"},{"date":"2028-01-28","name":"설날 연휴"}],"tasks":[{"id":"w-2027-01-03-01","date":"2027-01-03","weekly":true,"title":"관리자 선임신고 및 담당자 교육 확인(소방,가스,석면,승강기,놀이시설,기계설비)","detail":"","category":"시설","source":"default"},{"id":"w-2027-01-03-02","date":"2027-01-03","weekly":true,"title":"교육시설통합시스템,시설물통합정보관리시스템 담당자 변경(인사이동 시)","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-04-01","date":"2027-01-04","weekly":false,"title":"인계인수서 작성(실장)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-04-02","date":"2027-01-04","weekly":false,"title":"행정실 업무분장 결재","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-04-03","date":"2027-01-04","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-04-04","date":"2027-01-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-05-01","date":"2027-01-05","weekly":false,"title":"1.1. 전입자, 전출자 처리(근무일수 및 자기개발비 사용여부통보, 맞춤형복지, 4대보험)","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-05-02","date":"2027-01-05","weekly":false,"title":"12월 기지급액 연가보상비, 초과근무 정액분 정산 및 잔여연가 저축","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-05-03","date":"2027-01-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-01-06-01","date":"2027-01-06","weekly":false,"title":"시설 관리 각종 용역 검토(1개월 전 기한만료 통보)","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-06-02","date":"2027-01-06","weekly":false,"title":"학교운영위원회 연간운영계획안 수립","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-06-03","date":"2027-01-06","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-07-01","date":"2027-01-07","weekly":false,"title":"겨울방학중 시설보수","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-07-02","date":"2027-01-07","weekly":false,"title":"2027년 상반기(3.1.)교육공무직원 정기전보 근무희망조사 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-08-01","date":"2027-01-08","weekly":false,"title":"나이스 급여 마감(10일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-08-02","date":"2027-01-08","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-01-08-03","date":"2027-01-08","weekly":false,"title":"2027학년도 예산안 작성(권장)","detail":"","category":"관리자","source":"default"},{"id":"w-2027-01-10-01","date":"2027-01-10","weekly":true,"title":"어린이놀이시설 보험 행안부시스템에 등록(한국교육시설안전원 배상책임공제 가입증서 확인","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-11-01","date":"2027-01-11","weekly":false,"title":"2026년도 물품 증감 및 현재액 보고서, 2027년도 물품 수급관리계획서 제출","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-11-02","date":"2027-01-11","weekly":false,"title":"12월 4대보험 납부세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-11-03","date":"2027-01-11","weekly":false,"title":"12월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-12-01","date":"2027-01-12","weekly":false,"title":"하반기 업무추진비 사용내역 점검 실시 자료제출","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-12-02","date":"2027-01-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-12-03","date":"2027-01-12","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-13-01","date":"2027-01-13","weekly":false,"title":"제2·3종시설물 유지관리계획 제출(FMS)","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-14-01","date":"2027-01-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-15-01","date":"2027-01-15","weekly":false,"title":"2027학년도 예산 최종 검토(권장)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-15-02","date":"2027-01-15","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-15-03","date":"2027-01-15","weekly":false,"title":"일용근로자 근로내용확인신고((고용산재토탈)","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-15-04","date":"2027-01-15","weekly":false,"title":"17일 급여 지급(학교회계 지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-18-01","date":"2027-01-18","weekly":false,"title":"전년도 지방자치단체 교육투자 현황 자료 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-18-02","date":"2027-01-18","weekly":false,"title":"2026년 장애인근로자 현황 및 2027년도 고용계획 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-20-01","date":"2027-01-20","weekly":false,"title":"교직원 연말정산 공제자료 등록 권한 부여","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-20-02","date":"2027-01-20","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-20-03","date":"2027-01-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-20-04","date":"2027-01-20","weekly":false,"title":"2026년 교특회계 출납 정리 기한","detail":"","category":"세입","source":"default"},{"id":"d-2027-01-21-01","date":"2027-01-21","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-01-21-02","date":"2027-01-21","weekly":false,"title":"매입처별 세금계산서 합계표 홈택스 제출(7월~12월)","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-22-01","date":"2027-01-22","weekly":false,"title":"4분기 초과근무 교육 연수","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-22-02","date":"2027-01-22","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"w-2027-01-24-01","date":"2027-01-24","weekly":true,"title":"학교회계 예산안 제출(학교운영위원회)","detail":"회계연도 개시 30일 전","category":"관리자","source":"default"},{"id":"d-2027-01-25-01","date":"2027-01-25","weekly":false,"title":"전년도 중소기업제품 구매실적 제출(공공구매종합정보망)","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-26-01","date":"2027-01-26","weekly":false,"title":"신입생 수익자부담경비 납부방법신청 가정통신문","detail":"","category":"세입","source":"default"},{"id":"d-2027-01-27-01","date":"2027-01-27","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-27-02","date":"2027-01-27","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-28-01","date":"2027-01-28","weekly":false,"title":"1월 중대산업재해[안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-01-28-02","date":"2027-01-28","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"d-2027-01-28-03","date":"2027-01-28","weekly":false,"title":"연말정산 나이스 최종 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-29-01","date":"2027-01-29","weekly":false,"title":"방과후강사 (전)월보수액 통보(말일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-29-02","date":"2027-01-29","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-29-03","date":"2027-01-29","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-29-04","date":"2027-01-29","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-01-29-05","date":"2027-01-29","weekly":false,"title":"2.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"w-2027-01-31-01","date":"2027-01-31","weekly":true,"title":"연말정산 분할정산세금파악, 나이스 입력(전출예정 교원 및 교육공무직원 분할 환급 및 분할 징수 불가)","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-01-01","date":"2027-02-01","weekly":false,"title":"학교회계 추경예산편성(집행잔액 및 이월금 파악)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-01-02","date":"2027-02-01","weekly":false,"title":"공유재산 사용수익허가","detail":"","category":"세입","source":"default"},{"id":"d-2027-02-01-03","date":"2027-02-01","weekly":false,"title":"교실 및 특별실 재배치","detail":"","category":"시설","source":"default"},{"id":"d-2027-02-01-04","date":"2027-02-01","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-02-01","date":"2027-02-02","weekly":false,"title":"공유재산 사용수익허가","detail":"","category":"세입","source":"default"},{"id":"d-2027-02-02-02","date":"2027-02-02","weekly":false,"title":"신학기 대비 시설 안전점검","detail":"","category":"시설","source":"default"},{"id":"d-2027-02-02-03","date":"2027-02-02","weekly":false,"title":"학교운영위원회 규정 정비(2월말까지)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-03-01","date":"2027-02-03","weekly":false,"title":"2027.1.1.기준 지방공무원 승진후보자 명부 순위공개","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-03-02","date":"2027-02-03","weekly":false,"title":"근로소득/의료비 지급명세서 홈택스 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-04-01","date":"2027-02-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-02-04-02","date":"2027-02-04","weekly":false,"title":"연간 용역계약 체결","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-04-03","date":"2027-02-04","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-05-01","date":"2027-02-05","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-02-05-02","date":"2027-02-05","weekly":false,"title":"연말정산 근로소득지급명세서(급여마감 전) 홈택스 제출: 급여마감 후 신고파일 수정 불가","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-05-03","date":"2027-02-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"w-2027-02-07-01","date":"2027-02-07","weekly":true,"title":"2028년도 학교시설 사용허가(6개월이상 장기) 학교운영위원회 심의","detail":"","category":"세입","source":"default"},{"id":"d-2027-02-10-01","date":"2027-02-10","weekly":false,"title":"원천세 신고 및 납부마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-10-02","date":"2027-02-10","weekly":false,"title":"4대보험 신고 및 납부마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-10-03","date":"2027-02-10","weekly":false,"title":"나이스 급여 마감(연말정산 결과 반영)","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-11-01","date":"2027-02-11","weekly":false,"title":"학교운영위원회 개최(2.23.까지)(권장): 본예산,추경,명시이월금,발전기금운용계획서 포함.","detail":"","category":"세입","source":"default"},{"id":"d-2027-02-11-02","date":"2027-02-11","weekly":false,"title":"학교발전기금 운용계획 수립(예결산소위원회 포함) 학운위 안건 심의","detail":"(학교운영위원회 심의·의결 후 1개월 이내 공개)","category":"세입","source":"default"},{"id":"d-2027-02-12-01","date":"2027-02-12","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-12-02","date":"2027-02-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-12-03","date":"2027-02-12","weekly":false,"title":"전년도 부서별 생산 기록물 정리완료","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-12-04","date":"2027-02-12","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-15-01","date":"2027-02-15","weekly":false,"title":"녹색제품 구매이행계획 제출","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-15-02","date":"2027-02-15","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-15-03","date":"2027-02-15","weekly":false,"title":"일용근로자 근로내용확인신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-16-01","date":"2027-02-16","weekly":false,"title":"해빙기 교육시설 안전점검 결과 제출(교육시설통합정보시스템 입력)","detail":"","category":"시설","source":"default"},{"id":"d-2027-02-17-01","date":"2027-02-17","weekly":false,"title":"17일 급여 지급(학교회계 지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-18-01","date":"2027-02-18","weekly":false,"title":"인증신제품(NEP) 구매실적 및 구매계획 제출(시스템 입력 및 자료집계)","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-19-01","date":"2027-02-19","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"w-2027-02-21-01","date":"2027-02-21","weekly":true,"title":"2027학년도 예산 학교운영위원회 심의 완료 (회계연도개시 5일전까지)","detail":"심의 완료 후 27학년도 예산 확정","category":"관리자","source":"default"},{"id":"d-2027-02-22-01","date":"2027-02-22","weekly":false,"title":"하반기 교육공무직원및특수직군 근무성적 평가 계획 수립(말일까지 평가완료)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-22-02","date":"2027-02-22","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-02-22-03","date":"2027-02-22","weekly":false,"title":"물품재물조사 실시","detail":"","category":"시설","source":"default"},{"id":"d-2027-02-22-04","date":"2027-02-22","weekly":false,"title":"4대보험 납부 고지 확인(20일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-23-01","date":"2027-02-23","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-02-23-02","date":"2027-02-23","weekly":false,"title":"학교운영위원회 구성 계획 수립","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-23-03","date":"2027-02-23","weekly":false,"title":"학교운영위원회 활동사항 보고서 작성 및 공개","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-24-01","date":"2027-02-24","weekly":false,"title":"3.1. 발령 전 4대보험 보수총액신고서 제출[건강보험(3.10.까지),고용산재(3.15.까지)]","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-24-02","date":"2027-02-24","weekly":false,"title":"카드 포인트 확인 적립","detail":"","category":"세입","source":"default"},{"id":"d-2027-02-24-03","date":"2027-02-24","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-25-01","date":"2027-02-25","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-25-02","date":"2027-02-25","weekly":false,"title":"공무직 근속연수 재산정(3월)","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-25-03","date":"2027-02-25","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"교육급여 졸업생 중지처리(고)","category":"지출","source":"default"},{"id":"d-2027-02-25-04","date":"2027-02-25","weekly":false,"title":"2월 중대산업재해[안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-26-01","date":"2027-02-26","weekly":false,"title":"2026학년도 예산 마감","detail":"2027. 2. 26.(금): 회계연도 종료 전(원인행위,징수결의)마감:종료일 2027. 2. 28.(일)","category":"관리자","source":"default"},{"id":"d-2027-02-26-02","date":"2027-02-26","weekly":false,"title":"최종추경 이후 목적사업비 교부시 간주추경 처리","detail":"","category":"관리자","source":"default"},{"id":"d-2027-02-26-03","date":"2027-02-26","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-26-04","date":"2027-02-26","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-26-05","date":"2027-02-26","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-26-06","date":"2027-02-26","weekly":false,"title":"전보교육공무직원 서류이관 . 3.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-26-07","date":"2027-02-26","weekly":false,"title":"방과후강사 (전)월보수액 통보","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-26-08","date":"2027-02-26","weekly":false,"title":"기타소득 지급명세서 제출 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-02-26-09","date":"2027-02-26","weekly":false,"title":"학교발전기금,세외 출납마감","detail":"","category":"세입","source":"default"},{"id":"d-2027-02-27-01","date":"2027-02-27","weekly":false,"title":"지급명세서 제출기한 안내: 근로소득 3.10.까지 / 사업소득 3.10.까지 / 퇴직소득 3.10.까지 / 기타소득 2월 말일까지","detail":"","category":"급여","source":"default"},{"id":"w-2027-02-28-01","date":"2027-02-28","weekly":true,"title":"2027학년도 배치도로 교육시설통합정보시스템 공간현황 및 냉난방기 중앙제어 실명 변경","detail":"","category":"시설","source":"default"},{"id":"w-2027-02-28-02","date":"2027-02-28","weekly":true,"title":"학교운영위원회 선출 홍보","detail":"","category":"관리자","source":"default"},{"id":"w-2027-02-28-03","date":"2027-02-28","weekly":true,"title":"학교운영위원회 선출위원회 구성(3.10.이전까지)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-02-01","date":"2027-03-02","weekly":false,"title":"스쿨뱅킹 기초작업","detail":"(신입생 등록 및 진급처리)","category":"세입","source":"default"},{"id":"d-2027-03-02-02","date":"2027-03-02","weekly":false,"title":"직책급업무추진비지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-02-03","date":"2027-03-02","weekly":false,"title":"신규교육공무직원 근속연수 산정","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-02-04","date":"2027-03-02","weekly":false,"title":"세입세출외현금이월","detail":"","category":"세입","source":"default"},{"id":"d-2027-03-02-05","date":"2027-03-02","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-02-06","date":"2027-03-02","weekly":false,"title":"소방계획서 변경[실별 관리(화기)책임자 지정","detail":"","category":"시설","source":"default"},{"id":"d-2027-03-03-01","date":"2027-03-03","weekly":false,"title":"3.1. 전입자, 전출자 처리(근무일수통보, 맞춤형복지, 4대보험)","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-03-02","date":"2027-03-03","weekly":false,"title":"인계인수서 작성(학교장 변경시)","detail":"은행 대표자 변경신청","category":"관리자","source":"default"},{"id":"d-2027-03-03-03","date":"2027-03-03","weekly":false,"title":"학교운영위원회 선출공고(선출관리위원회)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-04-01","date":"2027-03-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-03-05-01","date":"2027-03-05","weekly":false,"title":"전보교육공무직원 서류이관","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-05-02","date":"2027-03-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-03-05-03","date":"2027-03-05","weekly":false,"title":"학교운영위원회 입후보자 등록(~3.11.까지)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-08-01","date":"2027-03-08","weekly":false,"title":"현장체험학습 전세버스 계약 준비","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-09-01","date":"2027-03-09","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-03-10-01","date":"2027-03-10","weekly":false,"title":"2월 원천세 신고 및 납부마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-10-02","date":"2027-03-10","weekly":false,"title":"2월 4대보험 신고 및 납부마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-10-03","date":"2027-03-10","weekly":false,"title":"나이스 급여 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-10-04","date":"2027-03-10","weekly":false,"title":"근로(의료), 사업, 퇴직소득 지급명세서 제출 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-10-05","date":"2027-03-10","weekly":false,"title":"건강보험 보수총액 신고 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-11-01","date":"2027-03-11","weekly":false,"title":"학교운영위원회 입후보자 결격 조회(선거공보 전)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-11-02","date":"2027-03-11","weekly":false,"title":"학교운영위원회 선거공보(등록마감일-투표 전일)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-12-01","date":"2027-03-12","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-12-02","date":"2027-03-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-12-03","date":"2027-03-12","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-15-01","date":"2027-03-15","weekly":false,"title":"대체인건비 등 신청(지방공무원,교육공무직원)","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-15-02","date":"2027-03-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-15-03","date":"2027-03-15","weekly":false,"title":"고용보산재보수총액 신고 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-16-01","date":"2027-03-16","weekly":false,"title":"2026년도 교육시설 시행/실행계획 결과 제출","detail":"","category":"시설","source":"default"},{"id":"d-2027-03-17-01","date":"2027-03-17","weekly":false,"title":"17일 급여 지급(학교회계 지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-17-02","date":"2027-03-17","weekly":false,"title":"학부모총회 및 학부모위원 선거(교원위원 선출),당선자 공고(~3.17.)(임기만료일 10일 이전)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-19-01","date":"2027-03-19","weekly":false,"title":"2026학년도 학교회계 및 발전기금 출납 마감","detail":"3.20. 폐쇄일 / 발전기금 이월금징수(3.1~3. 20) 21일을 넘기지 않음","category":"세입","source":"default"},{"id":"d-2027-03-22-01","date":"2027-03-22","weekly":false,"title":"전년도 순세계잉여금 징수","detail":"","category":"세입","source":"default"},{"id":"d-2027-03-22-02","date":"2027-03-22","weekly":false,"title":"학교발전기금 결산보고(학운위 심의)","detail":"","category":"세입","source":"default"},{"id":"d-2027-03-22-03","date":"2027-03-22","weekly":false,"title":"4대보험료 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-22-04","date":"2027-03-22","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-23-01","date":"2027-03-23","weekly":false,"title":"학교운영위원회 지역위원 선출(~3.30.까지)(임기만료일 전일)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-24-01","date":"2027-03-24","weekly":false,"title":"2027학년도 행정관련 교직원 교육","detail":"예산,업무추진비 교육 / 상반기 보안교육 실시(전 교직원 연 2회) / 1분기 초과근무 교육 연수","category":"관리자","source":"default"},{"id":"d-2027-03-25-01","date":"2027-03-25","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-25-02","date":"2027-03-25","weekly":false,"title":"상반기 물품 공동구매 대상 파악을 위한 수요조사 제출","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-26-01","date":"2027-03-26","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-03-26-02","date":"2027-03-26","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-26-03","date":"2027-03-26","weekly":false,"title":"상반기 교육시설통합정보시스템 시설현황 정기조사","detail":"","category":"시설","source":"default"},{"id":"d-2027-03-29-01","date":"2027-03-29","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-03-29-02","date":"2027-03-29","weekly":false,"title":"3월 중대산업재해[안전보건 도급 협의체], 및 1분기 합동점검","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-30-01","date":"2027-03-30","weekly":false,"title":"정기예금 예치(금액 및 기간 검토)","detail":"","category":"세입","source":"default"},{"id":"d-2027-03-30-02","date":"2027-03-30","weekly":false,"title":"4.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-30-03","date":"2027-03-30","weekly":false,"title":"학교발전기금 접수내역 학운위 보고 및 공개(4분기)","detail":"","category":"세입","source":"default"},{"id":"d-2027-03-31-01","date":"2027-03-31","weekly":false,"title":"학교운영위원회 지역위원 당선자 공고","detail":"","category":"관리자","source":"default"},{"id":"d-2027-03-31-02","date":"2027-03-31","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-31-03","date":"2027-03-31","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-31-04","date":"2027-03-31","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-03-31-05","date":"2027-03-31","weekly":false,"title":"방과후강사 (전)월보수액 신고(말일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-01-01","date":"2027-04-01","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-02-01","date":"2027-04-02","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"w-2027-04-04-01","date":"2027-04-04","weekly":true,"title":"위원장·부위원장 선출(임기개시일부터 15일 이내)[학교회계 및 발전기금 결산,예결산소위원회 , 학교급식소위원회 구성]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-04-05-01","date":"2027-04-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-04-05-02","date":"2027-04-05","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-06-01","date":"2027-04-06","weekly":false,"title":"학교운영위원회 회의 개최(~4.15전까지)","detail":"26학년도 학교운영위원회 활동상황보고서 보고 / 26학년도 간주추경 보고(간주추경 있을 시)","category":"관리자","source":"default"},{"id":"d-2027-04-07-01","date":"2027-04-07","weekly":false,"title":"학교발전기금 인계인수서 작성(운영위원장 변경 시)","detail":"","category":"세입","source":"default"},{"id":"d-2027-04-07-02","date":"2027-04-07","weekly":false,"title":"수목 소독 실시(권장)","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-08-01","date":"2027-04-08","weekly":false,"title":"졸업사진 앨범계약(학교운영위 심의 확인)","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-08-02","date":"2027-04-08","weekly":false,"title":"현장체험학습 전세버스 계약","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-09-01","date":"2027-04-09","weekly":false,"title":"나이스 급여 마감(건강·고용·연말정산 반영)","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-09-02","date":"2027-04-09","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-04-12-01","date":"2027-04-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-12-02","date":"2027-04-12","weekly":false,"title":"3월 4대보험 신고 및 납부마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-12-03","date":"2027-04-12","weekly":false,"title":"3월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-13-01","date":"2027-04-13","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-13-02","date":"2027-04-13","weekly":false,"title":"학교운영위원회 구성 결과 홍보","detail":"","category":"관리자","source":"default"},{"id":"d-2027-04-14-01","date":"2027-04-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-15-01","date":"2027-04-15","weekly":false,"title":"2027년도 상반기 정수물품 배정정수 정비 안내","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-15-02","date":"2027-04-15","weekly":false,"title":"대체인건비 등 신청(지방공무원,교육공무직)","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-15-03","date":"2027-04-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-16-01","date":"2027-04-16","weekly":false,"title":"17일 급여 지급(학교회계 지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-19-01","date":"2027-04-19","weekly":false,"title":"운동장 배수로 점검","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-20-01","date":"2027-04-20","weekly":false,"title":"4대보험 납부 고지서 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-20-02","date":"2027-04-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-21-01","date":"2027-04-21","weekly":false,"title":"학교 불법촬영 점검(연2회)","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-22-01","date":"2027-04-22","weekly":false,"title":"하반기 건축물 안전점검 후(교육청 선정 안전점검업체)(FMS 승인처리)","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-23-01","date":"2027-04-23","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-26-01","date":"2027-04-26","weekly":false,"title":"냉방기 청소 및 시운전(점검)","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-27-01","date":"2027-04-27","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-27-02","date":"2027-04-27","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-28-01","date":"2027-04-28","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-04-28-02","date":"2027-04-28","weekly":false,"title":"4월 중대산업재해[안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-04-28-03","date":"2027-04-28","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"d-2027-04-29-01","date":"2027-04-29","weekly":false,"title":"공무직 근속연수 재산정(5월)","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-29-02","date":"2027-04-29","weekly":false,"title":"5.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-29-03","date":"2027-04-29","weekly":false,"title":"2026학년도 결산서 운영위 제출 최종 확인","detail":"","category":"관리자","source":"default"},{"id":"d-2027-04-30-01","date":"2027-04-30","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-30-02","date":"2027-04-30","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-30-03","date":"2027-04-30","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-04-30-04","date":"2027-04-30","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-04-01","date":"2027-05-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-05-04-02","date":"2027-05-04","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-05-06-01","date":"2027-05-06","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-05-06-02","date":"2027-05-06","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-05-07-01","date":"2027-05-07","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"w-2027-05-09-01","date":"2027-05-09","weekly":true,"title":"나이스 급여 마감(10일, NEIS기여금 반영)","detail":"※기여금 기준소득월액 반영","category":"급여","source":"default"},{"id":"w-2027-05-09-02","date":"2027-05-09","weekly":true,"title":"연말정산환급 완료 시 보고","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-10-01","date":"2027-05-10","weekly":false,"title":"4월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-10-02","date":"2027-05-10","weekly":false,"title":"4월 4대보험 신고 및 납부(자동이체)","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-12-01","date":"2027-05-12","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-05-12-02","date":"2027-05-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-05-14-01","date":"2027-05-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-14-02","date":"2027-05-14","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-17-01","date":"2027-05-17","weekly":false,"title":"2026년 학교운영위원회 주요 운영현황 및 2027년 학교운영위원회 구성 현황 자료 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-05-17-02","date":"2027-05-17","weekly":false,"title":"17일 급여 지급(학교회계대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-17-03","date":"2027-05-17","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-18-01","date":"2027-05-18","weekly":false,"title":"2027년 하반기 6급이하 일반직공무원 전보 인사자료 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-05-19-01","date":"2027-05-19","weekly":false,"title":"2027년 기록물 생산현황(2026년 생산기록물) 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-05-20-01","date":"2027-05-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-05-20-02","date":"2027-05-20","weekly":false,"title":"상반기 가족수당 등 점검","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-20-03","date":"2027-05-20","weekly":false,"title":"4대보험료 납부 고지 확인(20일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-21-01","date":"2027-05-21","weekly":false,"title":"2026학년도 결산 심의와 결과 통보(권장)->공개","detail":"5.31. 심의결과 통보기한(종료후3개월 이내)","category":"관리자","source":"default"},{"id":"d-2027-05-24-01","date":"2027-05-24","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-26-01","date":"2027-05-26","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-05-26-02","date":"2027-05-26","weekly":false,"title":"여름철 교육시설 안전점검 계획 알림 및 결과 제출(교육시설통합정보망)","detail":"","category":"시설","source":"default"},{"id":"d-2027-05-27-01","date":"2027-05-27","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-05-27-02","date":"2027-05-27","weekly":false,"title":"5월 중대산업재해[안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-05-27-03","date":"2027-05-27","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-28-01","date":"2027-05-28","weekly":false,"title":"6.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-31-01","date":"2027-05-31","weekly":false,"title":"방과후강사 (전)월보수액 통보","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-31-02","date":"2027-05-31","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-31-03","date":"2027-05-31","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-31-04","date":"2027-05-31","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-05-31-05","date":"2027-05-31","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-01-01","date":"2027-06-01","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-06-04-01","date":"2027-06-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-06-04-02","date":"2027-06-04","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-06-07-01","date":"2027-06-07","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-06-08-01","date":"2027-06-08","weekly":false,"title":"장마 대비 점검(옥상,배수로,테라스 등)","detail":"","category":"시설","source":"default"},{"id":"d-2027-06-09-01","date":"2027-06-09","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-06-10-01","date":"2027-06-10","weekly":false,"title":"원천세 신고 및 납부마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-10-02","date":"2027-06-10","weekly":false,"title":"4대보험 신고 및 납부마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-10-03","date":"2027-06-10","weekly":false,"title":"나이스 급여 마감","detail":"공무원 급여 시 상반기연가보상비 5일분 지급(희망자에한함)","category":"급여","source":"default"},{"id":"d-2027-06-11-01","date":"2027-06-11","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-06-11-02","date":"2027-06-11","weekly":false,"title":"학교회계 결산 공개 확인(학교운영위원회 심의 결과 통보 후 10일 이내 학교홈페이지 공개)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-06-14-01","date":"2027-06-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-14-02","date":"2027-06-14","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-06-15-01","date":"2027-06-15","weekly":false,"title":"대체인건비 등 신청(지방공무원,교육공무직)","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-15-02","date":"2027-06-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-16-01","date":"2027-06-16","weekly":false,"title":"상반기 석면건축물 조사 및 기록 관리 (석면건축물위해성평가)","detail":"","category":"시설","source":"default"},{"id":"d-2027-06-17-01","date":"2027-06-17","weekly":false,"title":"17일 급여 지급(학교회계대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-18-01","date":"2027-06-18","weekly":false,"title":"6급 이하 일반직공무원 상반기 부서장 평가","detail":"","category":"관리자","source":"default"},{"id":"d-2027-06-21-01","date":"2027-06-21","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-06-21-02","date":"2027-06-21","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-22-01","date":"2027-06-22","weekly":false,"title":"교복공동구매 입찰 및 계약(학교운영위원회 심의 확인)","detail":"","category":"지출","source":"default"},{"id":"d-2027-06-23-01","date":"2027-06-23","weekly":false,"title":"상반기 지방공무원 근무성적평정 자료 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-06-24-01","date":"2027-06-24","weekly":false,"title":"상반기 건축물 안전점검(연2회)(교육청실시)","detail":"","category":"시설","source":"default"},{"id":"d-2027-06-24-02","date":"2027-06-24","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-25-01","date":"2027-06-25","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-06-25-02","date":"2027-06-25","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"w-2027-06-27-01","date":"2027-06-27","weekly":true,"title":"현업업무종사자 반기별 정기교육 이수(12시간)","detail":"1월~6월까지","category":"관리자","source":"default"},{"id":"d-2027-06-28-01","date":"2027-06-28","weekly":false,"title":"6월 중대산업재해[안전보건 도급 협의체], 및 2분기 합동점검","detail":"","category":"관리자","source":"default"},{"id":"d-2027-06-28-02","date":"2027-06-28","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-06-29-01","date":"2027-06-29","weekly":false,"title":"공무직 근속연수 재산정(7월)","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-29-02","date":"2027-06-29","weekly":false,"title":"7.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-29-03","date":"2027-06-29","weekly":false,"title":"학교발전기금 접수내역 학운위 보고 및 공개(1분기)","detail":"","category":"세입","source":"default"},{"id":"d-2027-06-30-01","date":"2027-06-30","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-30-02","date":"2027-06-30","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-30-03","date":"2027-06-30","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-06-30-04","date":"2027-06-30","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-01-01","date":"2027-07-01","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-07-01-02","date":"2027-07-01","weekly":false,"title":"인계인수서 작성(실장)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-07-01-03","date":"2027-07-01","weekly":false,"title":"행정실 업무분장 결재","detail":"","category":"관리자","source":"default"},{"id":"d-2027-07-01-04","date":"2027-07-01","weekly":false,"title":"관리자 선임신고 및 담당자 교육 확인","detail":"","category":"시설","source":"default"},{"id":"d-2027-07-02-01","date":"2027-07-02","weekly":false,"title":"7.1. 전입자, 전출자 처리(근무일수,자기개발지 지급여부통보, 맞춤형복지, 4대보험)","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-05-01","date":"2027-07-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-07-05-02","date":"2027-07-05","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-07-07-01","date":"2027-07-07","weekly":false,"title":"2027년 하반기(9.1.)교육공무직원 정기전보 근무희망조사 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-07-08-01","date":"2027-07-08","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-07-09-01","date":"2027-07-09","weekly":false,"title":"나이스 급여 마감(공무원 정근수당 확인 국민연금인상분 반영, 방중비근무자 근무일수 확인하여 일할계산)","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-12-01","date":"2027-07-12","weekly":false,"title":"6월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-12-02","date":"2027-07-12","weekly":false,"title":"6월 4대보험 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-13-01","date":"2027-07-13","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-07-13-02","date":"2027-07-13","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-07-14-01","date":"2027-07-14","weekly":false,"title":"4대보험 변동내역 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-14-02","date":"2027-07-14","weekly":false,"title":"행정실 하계 휴가계획 수립","detail":"","category":"관리자","source":"default"},{"id":"d-2027-07-15-01","date":"2027-07-15","weekly":false,"title":"상반기 제3종시설물 안전점검 승인(FMS)","detail":"","category":"시설","source":"default"},{"id":"d-2027-07-15-02","date":"2027-07-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-15-03","date":"2027-07-15","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-16-01","date":"2027-07-16","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-20-01","date":"2027-07-20","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-20-02","date":"2027-07-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-07-21-01","date":"2027-07-21","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-07-22-01","date":"2027-07-22","weekly":false,"title":"여름방학 시설 보수 수요조사(교실,특별실,화장실 등)","detail":"","category":"시설","source":"default"},{"id":"d-2027-07-23-01","date":"2027-07-23","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-26-01","date":"2027-07-26","weekly":false,"title":"매입처별 세금계산서 합계표 홈택스 제출(1월~6월)","detail":"","category":"지출","source":"default"},{"id":"d-2027-07-27-01","date":"2027-07-27","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-07-27-02","date":"2027-07-27","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-27-03","date":"2027-07-27","weekly":false,"title":"상반기 업무추진비 사용내역 점검 실시 및 자료제출","detail":"","category":"지출","source":"default"},{"id":"d-2027-07-28-01","date":"2027-07-28","weekly":false,"title":"7월 중대산업재해 [안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-07-29-01","date":"2027-07-29","weekly":false,"title":"8.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-29-02","date":"2027-07-29","weekly":false,"title":"2분기 초과근무 교육 연수","detail":"","category":"관리자","source":"default"},{"id":"d-2027-07-30-01","date":"2027-07-30","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-30-02","date":"2027-07-30","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-30-03","date":"2027-07-30","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-07-30-04","date":"2027-07-30","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-02-01","date":"2027-08-02","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-08-02-02","date":"2027-08-02","weekly":false,"title":"학교회계 세출예산 예비결산(7월말 기준) 자체","detail":"","category":"관리자","source":"default"},{"id":"d-2027-08-03-01","date":"2027-08-03","weekly":false,"title":"2027.7.31. 기준 지방공무원 승진후보자 명부 순위 공개","detail":"","category":"관리자","source":"default"},{"id":"d-2027-08-04-01","date":"2027-08-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-08-04-02","date":"2027-08-04","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-08-05-01","date":"2027-08-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-08-09-01","date":"2027-08-09","weekly":false,"title":"개학 전 시설 점검","detail":"","category":"시설","source":"default"},{"id":"d-2027-08-09-02","date":"2027-08-09","weekly":false,"title":"하반기 대비 화재예방 안전점검","detail":"","category":"시설","source":"default"},{"id":"d-2027-08-09-03","date":"2027-08-09","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-08-10-01","date":"2027-08-10","weekly":false,"title":"7월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-10-02","date":"2027-08-10","weekly":false,"title":"7월 4대보험 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-10-03","date":"2027-08-10","weekly":false,"title":"나이스 급여 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-12-01","date":"2027-08-12","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-08-12-02","date":"2027-08-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-08-13-01","date":"2027-08-13","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-13-02","date":"2027-08-13","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-17-01","date":"2027-08-17","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-17-02","date":"2027-08-17","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-18-01","date":"2027-08-18","weekly":false,"title":"태풍 대비 시설점검","detail":"","category":"시설","source":"default"},{"id":"d-2027-08-20-01","date":"2027-08-20","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-20-02","date":"2027-08-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-08-23-01","date":"2027-08-23","weekly":false,"title":"2027학년도 상반기 교육공무직원및특수직군 근무성적 평가 계획 수립(말일까지 평가완료)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-08-24-01","date":"2027-08-24","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-26-01","date":"2027-08-26","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-08-27-01","date":"2027-08-27","weekly":false,"title":"8월 중대산업재해[안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-08-27-02","date":"2027-08-27","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-08-27-03","date":"2027-08-27","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-30-01","date":"2027-08-30","weekly":false,"title":"공무직 근속연수 재산정(9월)","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-30-02","date":"2027-08-30","weekly":false,"title":"9.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-31-01","date":"2027-08-31","weekly":false,"title":"전보교육공무직원 서류이관","detail":"","category":"관리자","source":"default"},{"id":"d-2027-08-31-02","date":"2027-08-31","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-31-03","date":"2027-08-31","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-31-04","date":"2027-08-31","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-08-31-05","date":"2027-08-31","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-01-01","date":"2027-09-01","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-09-01-02","date":"2027-09-01","weekly":false,"title":"인계인수서 작성(학교장 발령시)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-09-01-03","date":"2027-09-01","weekly":false,"title":"하반기 보안교육 실시(전 교직원 연 2회)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-09-02-01","date":"2027-09-02","weekly":false,"title":"9.1. 전입자, 전출자 처리(근무일수통보, 맞춤형복지, 4대보험)","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-02-02","date":"2027-09-02","weekly":false,"title":"신규교육공무직원 근속연수 산정","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-03-01","date":"2027-09-03","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-09-06-01","date":"2027-09-06","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-09-06-02","date":"2027-09-06","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-09-09-01","date":"2027-09-09","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-09-10-01","date":"2027-09-10","weekly":false,"title":"8월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-10-02","date":"2027-09-10","weekly":false,"title":"8월 4대보험 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-10-03","date":"2027-09-10","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-10-04","date":"2027-09-10","weekly":false,"title":"나이스 급여 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-13-01","date":"2027-09-13","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-09-13-02","date":"2027-09-13","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-13-03","date":"2027-09-13","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-09-17-01","date":"2027-09-17","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-17-02","date":"2027-09-17","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-20-01","date":"2027-09-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-09-20-02","date":"2027-09-20","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-21-01","date":"2027-09-21","weekly":false,"title":"화단 및 조경 환경정리(권장)","detail":"","category":"시설","source":"default"},{"id":"d-2027-09-22-01","date":"2027-09-22","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-09-23-01","date":"2027-09-23","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-24-01","date":"2027-09-24","weekly":false,"title":"하반기 물품 공동구매 대상 파악을 위한 수요조사 제출","detail":"","category":"지출","source":"default"},{"id":"w-2027-09-26-01","date":"2027-09-26","weekly":true,"title":"(정기)위험성평가 매년1회 실시(전년도 일시 확인)","detail":"","category":"관리자","source":"default"},{"id":"w-2027-09-26-02","date":"2027-09-26","weekly":true,"title":"근골격계부담작업 유해요인조사 (3년마다 1회실시)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-09-27-01","date":"2027-09-27","weekly":false,"title":"10.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-27-02","date":"2027-09-27","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-28-01","date":"2027-09-28","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-09-28-02","date":"2027-09-28","weekly":false,"title":"9월 중대산업재해[안전보건 도급 협의체], 및 3분기 합동점검","detail":"","category":"관리자","source":"default"},{"id":"d-2027-09-29-01","date":"2027-09-29","weekly":false,"title":"건강보험공단 보수총액신고와 국세청 연말정산 신고내역이 상이하여 건강보험료 과오납 청구 가능성 존재 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-29-02","date":"2027-09-29","weekly":false,"title":"학교발전기금 접수내역 학운위 보고 및 공개(2분기)","detail":"","category":"세입","source":"default"},{"id":"d-2027-09-30-01","date":"2027-09-30","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-30-02","date":"2027-09-30","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-30-03","date":"2027-09-30","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-09-30-04","date":"2027-09-30","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-01-01","date":"2027-10-01","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-10-05-01","date":"2027-10-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-10-05-02","date":"2027-10-05","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-10-05-03","date":"2027-10-05","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-10-06-01","date":"2027-10-06","weekly":false,"title":"세입징수보고","detail":"","category":"세입","source":"default"},{"id":"d-2027-10-07-01","date":"2027-10-07","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-10-08-01","date":"2027-10-08","weekly":false,"title":"나이스 급여 마감(10일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-12-01","date":"2027-10-12","weekly":false,"title":"원천세 신고 및 납부(10일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-12-02","date":"2027-10-12","weekly":false,"title":"4대보험 신고 및 납부마감(10일,자동이체)","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-12-03","date":"2027-10-12","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-10-12-04","date":"2027-10-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-10-13-01","date":"2027-10-13","weekly":false,"title":"2027년 기록물평가심의회 결과 및 폐기 확정 기록물 정리 알림","detail":"","category":"관리자","source":"default"},{"id":"d-2027-10-14-01","date":"2027-10-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-15-01","date":"2027-10-15","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-15-02","date":"2027-10-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-15-03","date":"2027-10-15","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-18-01","date":"2027-10-18","weekly":false,"title":"난방기 청소 및 시운전(점검)","detail":"","category":"시설","source":"default"},{"id":"d-2027-10-19-01","date":"2027-10-19","weekly":false,"title":"학교 불법촬영 점검(연2회)","detail":"","category":"시설","source":"default"},{"id":"d-2027-10-20-01","date":"2027-10-20","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-20-02","date":"2027-10-20","weekly":false,"title":"3분기 초과근무 교육 연수","detail":"","category":"관리자","source":"default"},{"id":"d-2027-10-20-03","date":"2027-10-20","weekly":false,"title":"하반기 가족수당 등 점검","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-20-04","date":"2027-10-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-10-22-01","date":"2027-10-22","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"w-2027-10-24-01","date":"2027-10-24","weekly":true,"title":"근로복지공단 보수총액신고와 국세청 연말정산 신고내역이 상이하여 고용보험료 과오납 청구 가능성 존재 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-25-01","date":"2027-10-25","weekly":false,"title":"2027년도 공유재산 실태조사(공문시행 시)","detail":"","category":"시설","source":"default"},{"id":"d-2027-10-27-01","date":"2027-10-27","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-10-27-02","date":"2027-10-27","weekly":false,"title":"10월 중대산업재해 [안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-10-27-03","date":"2027-10-27","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-27-04","date":"2027-10-27","weekly":false,"title":"11.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-28-01","date":"2027-10-28","weekly":false,"title":"공무직 근속연수 재산정(11월)","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-29-01","date":"2027-10-29","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-29-02","date":"2027-10-29","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-29-03","date":"2027-10-29","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-10-29-04","date":"2027-10-29","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-01-01","date":"2027-11-01","weekly":false,"title":"추경예산편성(부서별 집행잔액 반납 및 신규예산 확인)","detail":"","category":"관리자","source":"default"},{"id":"d-2027-11-02-01","date":"2027-11-02","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-11-04-01","date":"2027-11-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-11-04-02","date":"2027-11-04","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-11-05-01","date":"2027-11-05","weekly":false,"title":"전월분 출납검사서(매월5일 이내)","detail":"","category":"세입","source":"default"},{"id":"d-2027-11-09-01","date":"2027-11-09","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-11-10-01","date":"2027-11-10","weekly":false,"title":"원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-10-02","date":"2027-11-10","weekly":false,"title":"4대보험 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-10-03","date":"2027-11-10","weekly":false,"title":"나이스 급여 마감","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-11-01","date":"2027-11-11","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-11-11-02","date":"2027-11-11","weekly":false,"title":"2027년 상반기 6급이하 일반직공무원 전보관룐 인사자료 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-11-12-01","date":"2027-11-12","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-11-12-02","date":"2027-11-12","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-15-01","date":"2027-11-15","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-15-02","date":"2027-11-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-16-01","date":"2027-11-16","weekly":false,"title":"교육시설공제 정기가입[한국교육시설안전원 공제정보망]","detail":"","category":"시설","source":"default"},{"id":"d-2027-11-17-01","date":"2027-11-17","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-18-01","date":"2027-11-18","weekly":false,"title":"겨울철 교육시설 안전점검 결과 제출(교육시설통합정보시스템 입력)","detail":"","category":"시설","source":"default"},{"id":"d-2027-11-22-01","date":"2027-11-22","weekly":false,"title":"4대보험 납부 고지 확인(20일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-22-02","date":"2027-11-22","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-11-24-01","date":"2027-11-24","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-25-01","date":"2027-11-25","weekly":false,"title":"옥외 수도시설 퇴수(동파예방)","detail":"","category":"시설","source":"default"},{"id":"d-2027-11-26-01","date":"2027-11-26","weekly":false,"title":"물품등록 및 정리","detail":"","category":"시설","source":"default"},{"id":"d-2027-11-26-02","date":"2027-11-26","weekly":false,"title":"11월 중대산업재해[안전보건 도급 협의체]","detail":"","category":"관리자","source":"default"},{"id":"d-2027-11-26-03","date":"2027-11-26","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"w-2027-11-28-01","date":"2027-11-28","weekly":true,"title":"성과지표 학교회계 효율적 집행(교육운영비,학습준비물,학생복지비) 집행률 점검(권장","detail":"","category":"지출","source":"default"},{"id":"d-2027-11-29-01","date":"2027-11-29","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-11-29-02","date":"2027-11-29","weekly":false,"title":"12.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-30-01","date":"2027-11-30","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-30-02","date":"2027-11-30","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-30-03","date":"2027-11-30","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-11-30-04","date":"2027-11-30","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-01-01","date":"2027-12-01","weekly":false,"title":"직책급업무수행경비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-02-01","date":"2027-12-02","weekly":false,"title":"하반기 건축물 안전점검 후(교육청 선정 안전점검업체)(FMS 승인처리)","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-03-01","date":"2027-12-03","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-06-01","date":"2027-12-06","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2027-12-06-02","date":"2027-12-06","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-07-01","date":"2027-12-07","weekly":false,"title":"학교회계 세출예산 예비결산(11월말 기준) 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-12-08-01","date":"2027-12-08","weekly":false,"title":"예산편성 교직원 교육","detail":"","category":"관리자","source":"default"},{"id":"d-2027-12-08-02","date":"2027-12-08","weekly":false,"title":"내년도 본예산 부서별 예산요구서 취합","detail":"","category":"관리자","source":"default"},{"id":"d-2027-12-09-01","date":"2027-12-09","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2027-12-09-02","date":"2027-12-09","weekly":false,"title":"안전·유지관리 기준 준수 점검","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-09-03","date":"2027-12-09","weekly":false,"title":"내년도 예산(안) 편성 작업","detail":"","category":"관리자","source":"default"},{"id":"d-2027-12-10-01","date":"2027-12-10","weekly":false,"title":"나이스 급여 마감(, 시간외 정액분 선지급방중 비근무 대상자 급여 일할계산)","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-10-02","date":"2027-12-10","weekly":false,"title":"11월 4대보험 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-10-03","date":"2027-12-10","weekly":false,"title":"11월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-13-01","date":"2027-12-13","weekly":false,"title":"방학 중 시설 보수 수요조사","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-13-02","date":"2027-12-13","weekly":false,"title":"소방계획서 수립(~말일까지)","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-13-03","date":"2027-12-13","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-13-04","date":"2027-12-13","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-14-01","date":"2027-12-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-14-02","date":"2027-12-14","weekly":false,"title":"2027년 교육시설 실행계획 제출(교육시설통합정보시스템 입력)","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-15-01","date":"2027-12-15","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-15-02","date":"2027-12-15","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-15-03","date":"2027-12-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-16-01","date":"2027-12-16","weekly":false,"title":"하반기 지방공무원 근무성적평정 자료 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2027-12-16-02","date":"2027-12-16","weekly":false,"title":"하반기 석면건축물 조사 및 기록 관리 (석면건축물위해성평가)","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-17-01","date":"2027-12-17","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-17-02","date":"2027-12-17","weekly":false,"title":"맞춤형복지 청구마감(예정)","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-20-01","date":"2027-12-20","weekly":false,"title":"동파 및 전기화재 대비 점검(급수관,아리수 퇴수)","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-20-02","date":"2027-12-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-20-03","date":"2027-12-20","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-22-01","date":"2027-12-22","weekly":false,"title":"교육시설의 안전 및 유지관리 실행 계획 수립(교육시설통합정보망 탑재)","detail":"","category":"시설","source":"default"},{"id":"d-2027-12-23-01","date":"2027-12-23","weekly":false,"title":"교육비 세액공제 제출(12월말)","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-24-01","date":"2027-12-24","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-24-02","date":"2027-12-24","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-28-01","date":"2027-12-28","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-28-02","date":"2027-12-28","weekly":false,"title":"12월 중대산업재해[안전보건 도급 협의체], 및 4분기 합동점검","detail":"","category":"관리자","source":"default"},{"id":"d-2027-12-29-01","date":"2027-12-29","weekly":false,"title":"현업업무종사자 반기별 정기교육 이수(12시간)","detail":"7월~12월까지","category":"관리자","source":"default"},{"id":"d-2027-12-29-02","date":"2027-12-29","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"d-2027-12-30-01","date":"2027-12-30","weekly":false,"title":"학교발전기금 접수내역 학운위 보고 및 공개(3분기)","detail":"","category":"세입","source":"default"},{"id":"d-2027-12-30-02","date":"2027-12-30","weekly":false,"title":"공무직 근속연수 재산정(1월)","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-30-03","date":"2027-12-30","weekly":false,"title":"1.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-31-01","date":"2027-12-31","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-31-02","date":"2027-12-31","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-31-03","date":"2027-12-31","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2027-12-31-04","date":"2027-12-31","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"w-2028-01-02-01","date":"2028-01-02","weekly":true,"title":"관리자 선임신고 및 담당자 교육확인(소방,가스,석면,승강기,놀이시설,활동공간)","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-03-01","date":"2028-01-03","weekly":false,"title":"인계인수서 작성(실장)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-03-02","date":"2028-01-03","weekly":false,"title":"행정실 업무분장 결재","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-03-03","date":"2028-01-03","weekly":false,"title":"시설 관리 각종 용역 검토(1개월 전 기한만료 통보)","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-03-04","date":"2028-01-03","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-04-01","date":"2028-01-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-04-02","date":"2028-01-04","weekly":false,"title":"학교운영위원회 연간운영계획안 수립","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-04-03","date":"2028-01-04","weekly":false,"title":"1.1. 전입자, 전출자 처리(근무일수통보, 맞춤형복지, 4대보험)","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-05-01","date":"2028-01-05","weekly":false,"title":"겨울방학중 시설 보수","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-05-02","date":"2028-01-05","weekly":false,"title":"공유재산 증감 및 현재액 보고서 제출","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-05-03","date":"2028-01-05","weekly":false,"title":"전월분 출납검사서","detail":"","category":"세입","source":"default"},{"id":"d-2028-01-06-01","date":"2028-01-06","weekly":false,"title":"2028년 상반기(3.1.)교육공무직원 정기전보 근무희망조서 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-06-02","date":"2028-01-06","weekly":false,"title":"2026년도 물품 증감 및 현재액 보고서, 2027년도 물품 수급관리계획서 제출","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-07-01","date":"2028-01-07","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2028-01-07-02","date":"2028-01-07","weekly":false,"title":"연말정산 국세청 간소화서비스 오픈 전 급여담당자 나이스 확인(비과세,기타소득,기타공제,기관공제 기부금 등)","detail":"","category":"급여","source":"default"},{"id":"w-2028-01-09-01","date":"2028-01-09","weekly":true,"title":"어린이놀이시설 보험 행안부시스템에 등록(한국교육시설안전원 배상책임공제 가입증서 확인)","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-10-01","date":"2028-01-10","weekly":false,"title":"나이스 급여 마감","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-10-02","date":"2028-01-10","weekly":false,"title":"원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-10-03","date":"2028-01-10","weekly":false,"title":"4대보험 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-11-01","date":"2028-01-11","weekly":false,"title":"하반기 업무추진비 사용내역 점검 실시 자료제출","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-11-02","date":"2028-01-11","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-12-01","date":"2028-01-12","weekly":false,"title":"제2·3종시설물 유지관리계획 제출(FMS)(공문시행 시)","detail":"","category":"시설","source":"default"},{"id":"d-2028-01-12-02","date":"2028-01-12","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-13-01","date":"2028-01-13","weekly":false,"title":"2028학년도 예산 확정 공문 시행 후 예산(안) 작성(권장)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-13-02","date":"2028-01-13","weekly":false,"title":"2026년 장애인근로자 현황 및 2027년도 고용계획 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-14-01","date":"2028-01-14","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-14-02","date":"2028-01-14","weekly":false,"title":"2028학년도 예산 최종 검토(권장)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-14-03","date":"2028-01-14","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-14-04","date":"2028-01-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-17-01","date":"2028-01-17","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-17-02","date":"2028-01-17","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-18-01","date":"2028-01-18","weekly":false,"title":"전년도 지방자치단체 교육투자 현황 자료 제출","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-19-01","date":"2028-01-19","weekly":false,"title":"교직원 연말정산 공제자료 등록 권한 부여","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-20-01","date":"2028-01-20","weekly":false,"title":"4대보험 납부 고지 확인(","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-20-02","date":"2028-01-20","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-21-01","date":"2028-01-21","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-21-02","date":"2028-01-21","weekly":false,"title":"4분기 초과근무 교육 연수","detail":"","category":"관리자","source":"default"},{"id":"d-2028-01-21-03","date":"2028-01-21","weekly":false,"title":"매입처별 세금계산서 합계표 홈택스 제출(7월~12월)","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-24-01","date":"2028-01-24","weekly":false,"title":"전년도 중소기업제품 구매실적 제출(공공구매종합정보망)","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-25-01","date":"2028-01-25","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-25-02","date":"2028-01-25","weekly":false,"title":"교직원 연말정산 결과 본인확인 후 마감","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-25-03","date":"2028-01-25","weekly":false,"title":"교직원 연말정산 공제자료 등록 권한 회수","detail":"","category":"급여","source":"default"},{"id":"w-2028-01-30-01","date":"2028-01-30","weekly":true,"title":"학교회계 예산안 제출(학교운영위원회)(권장) 회계연도 개시 30일 전","detail":"","category":"관리자","source":"default"},{"id":"w-2028-01-30-02","date":"2028-01-30","weekly":true,"title":"전년도 하반기(7월~12월) 간이지급명세(근로소득) 제출","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-31-01","date":"2028-01-31","weekly":false,"title":"방과후강사 (전)월보수액 통보","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-31-02","date":"2028-01-31","weekly":false,"title":"연말정산 나이스 최종 마감","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-31-03","date":"2028-01-31","weekly":false,"title":"2.1.자 지방공무원 정기호봉 승급","detail":"","category":"급여","source":"default"},{"id":"d-2028-01-31-04","date":"2028-01-31","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2028-01-31-05","date":"2028-01-31","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"w-2028-01-30-03","date":"2028-01-30","weekly":true,"title":"2028년도 학교시설 사용허가(6개월이상 장기) 학교운영위원회 심의","detail":"","category":"세입","source":"default"},{"id":"d-2028-02-01-01","date":"2028-02-01","weekly":false,"title":"학교회계 추경예산편성(집행잔액 및 이월금 파악)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-01-02","date":"2028-02-01","weekly":false,"title":"교실 및 특별실 재배치","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-01-03","date":"2028-02-01","weekly":false,"title":"신학기 대비 화재예방 안전점검","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-02-01","date":"2028-02-02","weekly":false,"title":"공유재산 사용수익허가","detail":"","category":"세입","source":"default"},{"id":"d-2028-02-03-01","date":"2028-02-03","weekly":false,"title":"근로소득/의료비 지급명세서 홈택스 제출","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-03-02","date":"2028-02-03","weekly":false,"title":"연간 용역계약 체결","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-03-03","date":"2028-02-03","weekly":false,"title":"여비 지급","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-04-01","date":"2028-02-04","weekly":false,"title":"안전점검의 날","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-04-02","date":"2028-02-04","weekly":false,"title":"연말정산 근로소득지급명세서(급여마감 전) 홈택스 제출:급여마감 후 신고파일 수정 불가","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-04-03","date":"2028-02-04","weekly":false,"title":"학교운영위원회 규정 정비","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-07-01","date":"2028-02-07","weekly":false,"title":"전월분 출납검사서(매월5일 이내)","detail":"","category":"세입","source":"default"},{"id":"d-2028-02-07-02","date":"2028-02-07","weekly":false,"title":"신학기 대비 시설점검","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-08-01","date":"2028-02-08","weekly":false,"title":"정기예금 해지 확인(회계말)","detail":"","category":"세입","source":"default"},{"id":"d-2028-02-08-02","date":"2028-02-08","weekly":false,"title":"보험 등 세외계좌 입금 확인","detail":"","category":"세입","source":"default"},{"id":"d-2028-02-09-01","date":"2028-02-09","weekly":false,"title":"학교발전기금 운용계획 수립(예결산소위원회 포함) 학운위 안건 심의","detail":"(학교운영위원회 심의·의결 후 1개월 이내 공개)","category":"세입","source":"default"},{"id":"d-2028-02-10-01","date":"2028-02-10","weekly":false,"title":"학교운영위원회 개최(2.23.까지)(권장): 본예산,추경,명시이월금,발전기금 운용계획 수립","detail":"","category":"세입","source":"default"},{"id":"d-2028-02-10-02","date":"2028-02-10","weekly":false,"title":"나이스 급여 마감(연말정산 반영)","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-10-03","date":"2028-02-10","weekly":false,"title":"1월 원천세 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-10-04","date":"2028-02-10","weekly":false,"title":"1월 4대보험 신고 및 납부","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-11-01","date":"2028-02-11","weekly":false,"title":"급식입찰공고","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-11-02","date":"2028-02-11","weekly":false,"title":"전년도 부서별 생산 기록물 정리완료","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-14-01","date":"2028-02-14","weekly":false,"title":"4대보험 취득·상실·변동 신고","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-14-02","date":"2028-02-14","weekly":false,"title":"녹색제품 구매이행계획 제출","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-14-03","date":"2028-02-14","weekly":false,"title":"신용카드 결제일","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-15-01","date":"2028-02-15","weekly":false,"title":"대체인건비 등 신청","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-15-02","date":"2028-02-15","weekly":false,"title":"일용근로자 근로내용확인신고(15일)","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-16-01","date":"2028-02-16","weekly":false,"title":"전체 품의 마감(예산잔액 확인 후 불용액 최소화를 위한 정리추경 대비)(권장)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-17-01","date":"2028-02-17","weekly":false,"title":"17일 급여 지급(학교회계지급대상자 지출)","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-17-02","date":"2028-02-17","weekly":false,"title":"해빙기 교육시설 안전점검 결과 제출(교육시설통합정보시스템 입력)","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-18-01","date":"2028-02-18","weekly":false,"title":"신학기 재배치 교실 교육시설통합정보시스템 수정 반영","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-18-02","date":"2028-02-18","weekly":false,"title":"인증신제품(NEP) 구매실적 및 구매계획 제출(","detail":"","category":"지출","source":"default"},{"id":"w-2028-02-20-01","date":"2028-02-20","weekly":true,"title":"지급명세서 제출기한 안내: 근로소득(연말,중도) 3.10.까지 / 사업소득 3.10.까지 / 퇴직소득 3.10.까지 / 기타소득 2월 말일까지","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-21-01","date":"2028-02-21","weekly":false,"title":"2027학년도 하반기 교육공무직원및특수직군 근무성적 평가 계획 수립(말일까지 평가완료)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-21-02","date":"2028-02-21","weekly":false,"title":"클린재정 점검표 작성.결재 월1회(20일기준)","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-21-03","date":"2028-02-21","weekly":false,"title":"4대보험 납부 고지 확인","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-22-01","date":"2028-02-22","weekly":false,"title":"물품등록 및 정리(권장)","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-22-02","date":"2028-02-22","weekly":false,"title":"학교운영위원회 구성 계획 수립","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-22-03","date":"2028-02-22","weekly":false,"title":"물품재물조사 실시","detail":"","category":"시설","source":"default"},{"id":"d-2028-02-23-01","date":"2028-02-23","weekly":false,"title":"3.1. 발령 전 4대보험 보수총액신고서 제출[건강보험(3.10.까지),고용산재(3.15.까지)]","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-23-02","date":"2028-02-23","weekly":false,"title":"2028년도 예산 심의.확정.공개(권장)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-23-03","date":"2028-02-23","weekly":false,"title":"개시 5일전 심의(학교운영위원회 심의 완료)","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-24-01","date":"2028-02-24","weekly":false,"title":"통합급여 공무직 4대보험 기관부담금 신청","detail":"목적사업비 반환(예산잔액 확인)","category":"급여","source":"default"},{"id":"d-2028-02-24-02","date":"2028-02-24","weekly":false,"title":"2027학년도 예산 집행 내역 점검(마감 준비)","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-25-01","date":"2028-02-25","weekly":false,"title":"재정보증보험 갱신","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-25-02","date":"2028-02-25","weekly":false,"title":"학교발전기금,세외 출납마감","detail":"","category":"세입","source":"default"},{"id":"d-2028-02-25-03","date":"2028-02-25","weekly":false,"title":"학교회계 세출예산 집행률 점검","detail":"","category":"지출","source":"default"},{"id":"d-2028-02-25-04","date":"2028-02-25","weekly":false,"title":"전보교육공무직원 서류이관","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-28-01","date":"2028-02-28","weekly":false,"title":"4대보험 기관부담금 세외 계좌 지출","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-28-02","date":"2028-02-28","weekly":false,"title":"공무직 근속연수 재산정(3월)","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-29-01","date":"2028-02-29","weekly":false,"title":"2028학년도 예산 마감","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-29-02","date":"2028-02-29","weekly":false,"title":"최종추경 이후 목적사업비 교부시 간주추경 처리","detail":"","category":"관리자","source":"default"},{"id":"d-2028-02-29-03","date":"2028-02-29","weekly":false,"title":"말일 급여 지급","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-29-04","date":"2028-02-29","weekly":false,"title":"근로·사업·기타소득 간이지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-29-05","date":"2028-02-29","weekly":false,"title":"일용근로소득 지급명세서 제출","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-29-06","date":"2028-02-29","weekly":false,"title":"방과후강사 (전)월보수액 신고","detail":"","category":"급여","source":"default"},{"id":"d-2028-02-29-07","date":"2028-02-29","weekly":false,"title":"기타소득 지급명세서 제출 마감","detail":"","category":"급여","source":"default"}],"notices":[],"changelog":[]}</script>
+<script>
+window.__bip = null; window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.__bip = e; });
+function start(SEED, LIVE){
+const CATS = ['관리자','시설','세입','지출','급여'];
+const ABBR = {관리자:'관',시설:'시',세입:'입',지출:'지',급여:'급',기타:'기'};
+const KEY = 'seoul-edu-cal:v1';
+const MONTHS = SEED.months.map(m => ({...m, key: m.year+'-'+String(m.month).padStart(2,'0')}));
+
+// ---------- storage ----------
+let store = {edits:{}, added:[], done:{}, deleted:{}, months:{}, filter:{}, mine:false, installSeen:false};
+try { const s = JSON.parse(localStorage.getItem(KEY)||'null'); if (s) store = Object.assign(store, s); } catch(e){}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} }
+
+const base = {}; SEED.tasks.forEach(t => base[t.id] = t);
+const hol = {}; SEED.holidays.forEach(h => (hol[h.date] = hol[h.date] ? hol[h.date]+' · '+h.name : h.name));
+
+function allTasks(){
+  const out = [];
+  for (const t of SEED.tasks){
+    if (store.deleted[t.id]) continue;
+    const e = store.edits[t.id];
+    out.push(e ? {...t, ...e, source:'user-edited'} : t);
+  }
+  for (const t of store.added) if (!store.deleted[t.id]) out.push(t);
+  return out;
+}
+function isOn(cat){ return store.filter[cat] !== false; }
+function visible(t){
+  if (!isOn(t.category)) return false;
+  if (store.mine && t.source === 'default') return false;
+  return true;
+}
+
+// ---------- dates ----------
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
+const now = new Date(); const TODAY = iso(now);
+const inRange = TODAY >= '2027-01-01' && TODAY <= '2028-02-29';
+const REF = inRange ? TODAY : '2027-01-04';   // 기간 전이면 2027년 1월 첫 근무일 기준으로 미리보기
+let cur = MONTHS.findIndex(m => m.key === REF.slice(0,7)); if (cur < 0) cur = 0;
+
+// ---------- header ----------
+const msel = document.getElementById('msel');
+MONTHS.forEach((m,i) => { const o = document.createElement('option'); o.value = i; o.textContent = m.year+'년 '+m.month+'월'; msel.appendChild(o); });
+msel.onchange = () => { cur = +msel.value; render(); };
+document.getElementById('prev').onclick = () => go(-1);
+document.getElementById('next').onclick = () => go(1);
+document.getElementById('todayBtn').onclick = () => { cur = Math.max(0, MONTHS.findIndex(m => m.key === REF.slice(0,7))); render(); };
+function go(d){ cur = Math.min(MONTHS.length-1, Math.max(0, cur+d)); render(); }
+
+function renderChips(){
+  const box = document.getElementById('chips'); box.innerHTML = '';
+  CATS.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (isOn(c) ? '' : ' off');
+    b.innerHTML = `<span class="dot" style="background:var(--c${c})"></span>${c}`;
+    b.title = c + ' 업무 보이기/숨기기';
+    b.onclick = () => { store.filter[c] = !isOn(c); save(); render(); };
+    box.appendChild(b);
+  });
+  const mine = document.createElement('button');
+  mine.className = 'chip mine' + (store.mine ? ' on' : '');
+  mine.textContent = '✎ 내가 고친 업무만';
+  mine.onclick = () => { store.mine = !store.mine; save(); render(); };
+  box.appendChild(mine);
+}
+
+// month meta editing
+const wdEl = document.getElementById('wd'), ntEl = document.getElementById('notice');
+function mOverride(){ return store.months[MONTHS[cur].key] || {}; }
+wdEl.onblur = () => { const v = wdEl.textContent.replace(/\D/g,''); (store.months[MONTHS[cur].key] ||= {}).workDays = v ? +v : null; save(); };
+ntEl.onblur = () => { (store.months[MONTHS[cur].key] ||= {}).notice = ntEl.textContent.trim(); save(); renderMeta(); };
+[wdEl, ntEl].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); el.blur(); } }));
+function renderMeta(){
+  const m = MONTHS[cur], o = mOverride();
+  wdEl.textContent = (o.workDays ?? m.workDays ?? '');
+  const n = (o.notice ?? m.notice) || '';
+  ntEl.textContent = n || '월별 안내 없음 (클릭해서 입력)';
+  ntEl.style.color = n ? '' : '#8a93a3';
+}
+ntEl.onfocus = () => { if (!((mOverride().notice ?? MONTHS[cur].notice))) ntEl.textContent = ''; ntEl.style.color=''; };
+
+// ---------- grid ----------
+const grid = document.getElementById('grid');
+function itemEl(t){
+  const d = document.createElement('div');
+  d.className = 'it' + (store.done[t.id] ? ' done' : '') + (t.source !== 'default' ? ' edited' : '') + (t.weekly ? ' weekly' : '');
+  d.style.setProperty('--c', `var(--c${t.category})`);
+  d.draggable = true;
+  d.innerHTML = `<span class="tag">${ABBR[t.category]}</span><span class="tx"></span>`;
+  d.querySelector('.tx').textContent = t.title + (t.detail ? ' — ' + t.detail : '');
+  d.title = t.category + ' · ' + t.title + (t.detail ? '\n' + t.detail : '') + (t.memo ? '\n메모: ' + t.memo : '');
+  d.onclick = e => { e.stopPropagation(); openEdit(t.id); };
+  d.ondragstart = e => { e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = 'move'; };
+  return d;
+}
+let printing = false;
+function addItems(cell, box, list, ds){
+  list.forEach(t => box.appendChild(itemEl(t)));
+  cell.ondragover = e => { e.preventDefault(); cell.classList.add('drop'); };
+  cell.ondragleave = () => cell.classList.remove('drop');
+  if (list.length && !printing) requestAnimationFrame(() => fitCell(cell, box, ds, list.length, cell.classList.contains('wkc')));
+}
+function render(){
+  msel.value = cur; renderChips(); renderMeta();
+  const m = MONTHS[cur];
+  document.querySelectorAll('.yr b').forEach((b,i) => b.textContent = String(m.year)[i]);
+  const first = new Date(m.year, m.month-1, 1);
+  const start = new Date(first); start.setDate(1 - first.getDay());
+  const last = new Date(m.year, m.month, 0);
+  const weeks = Math.ceil((first.getDay() + last.getDate()) / 7);
+  grid.style.gridTemplateRows = `repeat(${weeks},1fr)`;
+  const tasks = allTasks().filter(visible);
+  const byDate = {}, byWeek = {};
+  tasks.forEach(t => t.weekly ? (byWeek[t.date] ||= []).push(t) : (byDate[t.date] ||= []).push(t));
+  const doneLast = (a,b) => (!!store.done[a.id] - !!store.done[b.id]);
+  grid.innerHTML = '';
+  for (let w = 0; w < weeks; w++){
+    // ---- 주간 확인 칸 ----
+    const sun = new Date(start); sun.setDate(start.getDate() + w*7);
+    const sat = new Date(sun); sat.setDate(sun.getDate()+6);
+    const ws = iso(sun);
+    const wc = document.createElement('div'); wc.className = 'cell wkc';
+    const wh = document.createElement('div'); wh.className = 'chead';
+    wh.innerHTML = `<span class="wkl">${w+1}주</span><span class="wkd">${sun.getMonth()+1}.${sun.getDate()}.~${sat.getMonth()+1}.${sat.getDate()}.</span>`;
+    const wadd = document.createElement('button'); wadd.className='add'; wadd.textContent='+'; wadd.title='주간 확인 사항 추가';
+    wadd.onclick = e => { e.stopPropagation(); openEdit(null, ws, true); };
+    wh.appendChild(wadd); wc.appendChild(wh);
+    const wbox = document.createElement('div'); wbox.className='items'; wc.appendChild(wbox);
+    wc.ondblclick = () => openEdit(null, ws, true);
+    wc.ondrop = e => { e.preventDefault(); wc.classList.remove('drop'); const id = e.dataTransfer.getData('text/plain'); if (id) moveTask(id, ws, true); };
+    grid.appendChild(wc);
+    addItems(wc, wbox, (byWeek[ws]||[]).slice().sort(doneLast), ws);
+    // ---- 일~토 ----
+    for (let i = 0; i < 7; i++){
+      const d = new Date(sun); d.setDate(sun.getDate()+i);
+      const ds = iso(d), dow = i;
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (d.getMonth() !== m.month-1 ? ' out' : '') + (ds === TODAY ? ' today' : '') + (dow===0 ? ' sunc' : dow===6 ? ' satc' : '') + (hol[ds] ? ' hol' : '');
+      const head = document.createElement('div'); head.className = 'chead';
+      head.innerHTML = `<span class="dnum">${d.getDate()}</span>` + (hol[ds] ? `<span class="hname">${hol[ds]}</span>` : '');
+      const add = document.createElement('button'); add.className = 'add'; add.textContent = '+'; add.title = '업무 추가';
+      add.onclick = e => { e.stopPropagation(); openEdit(null, ds); };
+      head.appendChild(add); cell.appendChild(head);
+      const box = document.createElement('div'); box.className = 'items'; cell.appendChild(box);
+      cell.ondblclick = () => openEdit(null, ds);
+      cell.ondrop = e => { e.preventDefault(); cell.classList.remove('drop'); const id = e.dataTransfer.getData('text/plain'); if (id) moveTask(id, ds, false); };
+      grid.appendChild(cell);
+      addItems(cell, box, (byDate[ds]||[]).slice().sort(doneLast), ds);
+    }
+  }
+  document.querySelector('.cal').classList.toggle('listmode', store.view === 'list');
+  f('viewBtn').textContent = store.view === 'list' ? '달력' : '목록';
+  if (store.view === 'list') renderList(tasks, start, weeks);
+  renderSide();
+}
+function renderList(tasks, start, weeks){
+  const L = f('list'); L.innerHTML = '';
+  const end = new Date(start); end.setDate(start.getDate() + weeks*7 - 1);
+  const s0 = iso(start), e0 = iso(end), mk = MONTHS[cur].key;
+  const rows = tasks.filter(t => t.date >= s0 && t.date <= e0 && (t.weekly || t.date.slice(0,7) === mk)).sort((a,b) => a.date.localeCompare(b.date) || (b.weekly - a.weekly));
+  if (!rows.length){ L.innerHTML = '<div class="empty" style="padding:20px">표시할 업무가 없습니다.</div>'; return; }
+  let last = '';
+  rows.forEach(t => {
+    const key = t.date + (t.weekly ? 'w' : '');
+    if (key !== last){ last = key; const d = parse(t.date); const h = document.createElement('div');
+      h.className = 'lh' + (!t.weekly && (hol[t.date] || d.getDay() === 0) ? ' hol' : '');
+      if (t.weekly){ const e2 = new Date(d); e2.setDate(d.getDate()+6); h.textContent = `주간 확인 · ${d.getMonth()+1}.${d.getDate()}.~${e2.getMonth()+1}.${e2.getDate()}.`; }
+      else h.textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})` + (hol[t.date] ? ' · ' + hol[t.date] : '');
+      L.appendChild(h); }
+    const r = document.createElement('div'); r.className = 'lr' + (store.done[t.id] ? ' done' : ''); r.style.setProperty('--c', `var(--c${t.category})`);
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!store.done[t.id]; cb.onchange = () => toggleDone(t.id);
+    const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = t.category;
+    const tx = document.createElement('span'); tx.className = 't'; tx.textContent = t.title + (t.source !== 'default' ? ' ✎' : '');
+    const sub = [t.detail, t.memo ? '메모: ' + t.memo : ''].filter(Boolean).join(' · ');
+    if (sub){ const sm = document.createElement('small'); sm.textContent = sub; tx.appendChild(sm); }
+    tx.onclick = () => openEdit(t.id);
+    r.append(cb, tg, tx); L.appendChild(r);
+  });
+}
+function fitCell(cell, box, ds, n, wk){
+  if (box.scrollHeight <= box.clientHeight + 1) return;
+  const kids = [...box.children];
+  let shown = kids.length;
+  while (shown > 0 && box.scrollHeight > box.clientHeight + 1){ kids[--shown].remove(); if (!box.querySelector('.more')) { const mo = document.createElement('button'); mo.className='more'; box.appendChild(mo);} box.querySelector('.more').textContent = `+${n - shown}건 더 보기`; }
+  const mo = box.querySelector('.more'); if (mo) { box.appendChild(mo); mo.onclick = e => { e.stopPropagation(); openDay(ds, wk); }; }
+}
+
+// ---------- side panel ----------
+function weekRange(ds){ const d = parse(ds); const s = new Date(d); s.setDate(d.getDate()-d.getDay()); const e = new Date(s); e.setDate(s.getDate()+6); return [iso(s), iso(e)]; }
+function sideList(arr, withD){
+  const ul = document.createElement('ul'); ul.className = 'sl';
+  if (!arr.length){ const p = document.createElement('div'); p.className='empty'; p.textContent='없음'; return p; }
+  arr.forEach(t => {
+    const li = document.createElement('li'); li.style.setProperty('--c', `var(--c${t.category})`);
+    if (store.done[t.id]) li.classList.add('done');
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked = !!store.done[t.id]; cb.title='완료';
+    cb.onchange = () => { toggleDone(t.id); };
+    const sp = document.createElement('span'); sp.className='t'; sp.textContent = t.title; sp.onclick = () => openEdit(t.id);
+    li.append(cb, sp);
+    if (withD){ const diff = Math.round((parse(t.date)-parse(REF))/864e5); const b = document.createElement('span'); b.className='dd'+(diff===0?' d0':''); b.textContent = diff===0 ? 'D-day' : 'D-'+diff; li.appendChild(b); }
+    ul.appendChild(li);
+  });
+  return ul;
+}
+function renderSide(){
+  const side = document.getElementById('side'); side.innerHTML = '';
+  const tasks = allTasks().filter(visible);
+  const [ws, we] = weekRange(REF);
+  const today = tasks.filter(t => t.date === REF && !t.weekly);
+  const weekly = tasks.filter(t => t.weekly && t.date === ws);
+  const week = tasks.filter(t => !t.weekly && t.date > REF && t.date <= we).sort((a,b)=>a.date.localeCompare(b.date));
+  const lim = new Date(parse(REF)); lim.setDate(lim.getDate()+7);
+  const soon = tasks.filter(t => !t.weekly && !store.done[t.id] && t.date > we && t.date <= iso(lim)).sort((a,b)=>a.date.localeCompare(b.date));
+  const d = parse(REF);
+  const lab = `${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})`;
+  const h = (txt, n) => { const e = document.createElement('h3'); e.innerHTML = `${txt} <span class="cnt">${n}건</span>`; return e; };
+  if (!inRange){ const n = document.createElement('div'); n.className='sidenote'; n.textContent = '달력 기간(2027.1.~2028.2.) 전이라 2027년 1월 4일 기준으로 미리 보여 드립니다.'; side.appendChild(n); }
+  side.append(h('오늘 · '+lab, today.length), sideList(today));
+  side.append(h('이번 주 확인 사항', weekly.length), sideList(weekly));
+  side.append(h('이번 주 남은 업무', week.length), sideList(week, true));
+  side.append(h('다가오는 업무 (7일 이내)', soon.length), sideList(soon, true));
+}
+
+// ---------- edit ----------
+const edS = document.getElementById('editScrim');
+const f = id => document.getElementById(id);
+let editing = null, editCat = '관리자';
+function catButtons(){
+  const box = f('fCats'); box.innerHTML='';
+  CATS.forEach(c => { const b = document.createElement('button'); b.type='button'; b.textContent=c; b.style.setProperty('--c',`var(--c${c})`); if (c===editCat) b.classList.add('sel'); b.onclick=()=>{editCat=c;catButtons();}; box.appendChild(b); });
+}
+function findTask(id){ return allTasks().find(t => t.id === id); }
+function openEdit(id, date, wk){
+  closeAll();
+  editing = id;
+  const t = id ? findTask(id) : {title:'', detail:'', date: date, weekly: !!wk, category: '관리자', memo:''};
+  f('edTitle').firstChild.textContent = id ? '업무 수정' : (wk ? '주간 확인 사항 추가' : '업무 추가');
+  f('fTitle').value = t.title; f('fDetail').value = t.detail||''; f('fDate').value = t.date; f('fWeekly').checked = !!t.weekly;
+  f('fMemo').value = t.memo||''; f('fDone').checked = !!(id && store.done[id]); editCat = t.category in ABBR ? t.category : '관리자';
+  catButtons();
+  const isBase = id && base[id];
+  f('fReset').hidden = !(isBase && store.edits[id]);
+  f('fDel').hidden = !id;
+  const o = f('fOrig');
+  if (isBase && store.edits[id]){ o.hidden=false; o.textContent = '원본: ' + base[id].date + ' · ' + base[id].category + ' · ' + base[id].title + (base[id].detail ? ' — '+base[id].detail : ''); } else o.hidden = true;
+  edS.classList.add('on'); setTimeout(()=>f('fTitle').focus(), 30);
+}
+f('fSave').onclick = () => {
+  const v = {title: f('fTitle').value.trim(), detail: f('fDetail').value.trim(), date: f('fDate').value, weekly: f('fWeekly').checked, category: editCat, memo: f('fMemo').value.trim()};
+  if (!v.title || !v.date){ f('fTitle').focus(); return; }
+  if (v.weekly){ v.date = weekRange(v.date)[0]; }
+  if (editing && base[editing]){
+    const b = base[editing], diff = {};
+    for (const k in v) if ((b[k]||'') !== (v[k]||'') && !(k==='weekly' && !!b[k]===v[k])) diff[k] = v[k];
+    if (Object.keys(diff).length) store.edits[editing] = diff; else delete store.edits[editing];
+  } else if (editing){
+    Object.assign(store.added.find(t => t.id === editing), v);
+  } else {
+    editing = 'u-' + Date.now().toString(36);
+    store.added.push({id: editing, source:'user', ...v});
+  }
+  if (f('fDone').checked) store.done[editing] = 1; else delete store.done[editing];
+  save(); closeAll(); jumpTo(v.date); render();
+};
+f('fReset').onclick = () => { delete store.edits[editing]; save(); closeAll(); render(); toast('원래 내용으로 되돌렸습니다.'); };
+f('fDel').onclick = () => {
+  const id = editing; store.deleted[id] = 1; save(); closeAll(); render();
+  toast('업무를 삭제했습니다.', () => { delete store.deleted[id]; save(); render(); });
+};
+function moveTask(id, ds, wk){
+  const t = findTask(id); if (!t) return;
+  if (t.date === ds && !!t.weekly === !!wk) return;
+  const prev = {date: t.date, weekly: !!t.weekly};
+  setField(id, {date: ds, weekly: !!wk});
+  render();
+  const d = parse(ds);
+  toast(wk ? `${d.getMonth()+1}월 ${d.getDate()}일 주의 주간 확인 사항으로 옮겼습니다.` : `${d.getMonth()+1}월 ${d.getDate()}일로 옮겼습니다.`, () => { setField(id, prev); render(); });
+}
+function setField(id, obj){
+  if (base[id]){
+    const e = store.edits[id] || {};
+    for (const k in obj){ if ((base[id][k]||false) === (obj[k]||false)) delete e[k]; else e[k] = obj[k]; }
+    if (Object.keys(e).length) store.edits[id] = e; else delete store.edits[id];
+  } else Object.assign(store.added.find(t => t.id === id), obj);
+  save();
+}
+function toggleDone(id){ if (store.done[id]) delete store.done[id]; else store.done[id] = 1; save(); render(); }
+function jumpTo(ds){ const k = ds.slice(0,7); const i = MONTHS.findIndex(m => m.key === k); if (i >= 0) cur = i; }
+
+// ---------- day list ----------
+function openDay(ds, wk){
+  closeAll();
+  const d = parse(ds);
+  f('lsTitle').textContent = wk ? `${d.getMonth()+1}월 ${d.getDate()}일 주 · 주간 확인 사항` : `${d.getMonth()+1}월 ${d.getDate()}일 (${'일월화수목금토'[d.getDay()]})` + (hol[ds] ? ' · '+hol[ds] : '');
+  const ul = f('lsList'); ul.innerHTML='';
+  allTasks().filter(visible).filter(t => t.date === ds && !!t.weekly === !!wk).forEach(t => {
+    const li = document.createElement('li'); li.style.setProperty('--c',`var(--c${t.category})`);
+    li.innerHTML = `<span></span><small></small>`; li.firstChild.textContent = (store.done[t.id]?'✔ ':'') + t.title; li.lastChild.textContent = t.category + (t.detail? ' · '+t.detail:'');
+    li.onclick = () => openEdit(t.id); ul.appendChild(li);
+  });
+  f('lsAdd').onclick = () => openEdit(null, ds, wk);
+  f('listScrim').classList.add('on');
+}
+
+// ---------- search ----------
+const q = f('q');
+q.addEventListener('input', () => {
+  const s = q.value.trim(); if (!s){ closeAll(); return; }
+  const hits = allTasks().filter(t => (t.title+' '+(t.detail||'')+' '+(t.memo||'')).includes(s)).sort((a,b)=>a.date.localeCompare(b.date));
+  f('lsTitle').textContent = `"${s}" 검색 결과 ${hits.length}건`;
+  const ul = f('lsList'); ul.innerHTML='';
+  hits.slice(0,200).forEach(t => {
+    const li = document.createElement('li'); li.style.setProperty('--c',`var(--c${t.category})`);
+    const d = parse(t.date);
+    li.innerHTML = `<span></span><small></small>`; li.firstChild.textContent = t.title; li.lastChild.textContent = `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}. · ${t.category}`;
+    li.onclick = () => { jumpTo(t.date); q.value=''; closeAll(); render(); };
+    ul.appendChild(li);
+  });
+  f('lsFt').style.display = 'none';
+  f('listScrim').classList.add('on');
+});
+
+// ---------- backup ----------
+function saveFile(name, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+f('backupBtn').onclick = () => { closeAll(); f('bkMsg').hidden = true; f('verInfo').textContent = '원본 일정 버전 ' + SEED.version + (LIVE ? '' : ' (오프라인 기본 자료)'); f('bkScrim').classList.add('on'); };
+f('bkSave').onclick = () => {
+  const {filter, installSeen, view, ...data} = store;
+  saveFile('서울교육행정달력_백업_' + iso(new Date()) + '.json', new Blob([JSON.stringify({app:'서울교육행정달력', saved: new Date().toISOString(), ...data})], {type:'application/json'}));
+  msg('백업 파일을 저장했습니다. 내려받기 폴더를 확인하세요.');
+};
+f('bkFile').onchange = e => {
+  const file = e.target.files[0]; if (!file) return; e.target.value = '';
+  file.text().then(txt => {
+    try { const d = JSON.parse(txt); if (d.app !== '서울교육행정달력') throw 0;
+      ['edits','done','deleted','months','hiddenNotices'].forEach(k => store[k] = d[k] || {}); store.added = d.added || []; if (d.seenVersion) store.seenVersion = d.seenVersion;
+      save(); render(); msg('백업 파일에서 복원했습니다.'); }
+    catch(err){ msg('이 달력의 백업 파일이 아닙니다.'); }
+  });
+};
+function loadXLSX(){ return new Promise((res, rej) => { if (window.XLSX) return res(); const sc = document.createElement('script'); sc.src = 'lib/xlsx.full.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+f('bkXlsx').onclick = async () => {
+  try { await loadXLSX(); } catch(e){ msg('엑셀 기능을 불러오지 못했습니다. 인터넷에 연결한 뒤 다시 해 보세요.'); return; }
+  const wb = XLSX.utils.book_new();
+  const all = allTasks().sort((a,b) => a.date.localeCompare(b.date) || (b.weekly - a.weekly));
+  MONTHS.forEach(m => {
+    const rows = [['날짜','요일','구분','분야','업무','세부 내용','메모','완료','수정 여부']];
+    all.filter(t => t.date.slice(0,7) === m.key).forEach(t => rows.push([t.date, '일월화수목금토'[parse(t.date).getDay()], t.weekly ? '주간 확인' : '', t.category, t.title, t.detail || '', t.memo || '', store.done[t.id] ? '완료' : '', t.source === 'default' ? '' : (t.source === 'user' ? '추가' : '수정')]));
+    const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{wch:11},{wch:5},{wch:9},{wch:7},{wch:60},{wch:36},{wch:30},{wch:6},{wch:8}];
+    XLSX.utils.book_append_sheet(wb, ws, m.year + '.' + pad(m.month));
+  });
+  const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  saveFile('서울교육행정달력_' + iso(new Date()) + '.xlsx', new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  msg('엑셀 파일을 저장했습니다.');
+};
+let resetArm = false;
+f('bkReset').onclick = () => {
+  if (!resetArm){ resetArm = true; f('bkReset').textContent = '정말 초기화할까요? 한 번 더 누르세요'; setTimeout(()=>{resetArm=false; f('bkReset').textContent='전체 초기화(원본 달력으로)';}, 4000); return; }
+  store.edits={}; store.added=[]; store.done={}; store.deleted={}; store.months={}; save(); render(); resetArm=false; f('bkReset').textContent='전체 초기화(원본 달력으로)'; msg('원본 달력으로 초기화했습니다.');
+};
+function msg(t){ const m = f('bkMsg'); m.hidden=false; m.textContent=t; }
+f('viewBtn').onclick = () => { store.view = store.view === 'list' ? 'cal' : 'list'; save(); render(); };
+f('printBtn').onclick = () => window.print();
+window.addEventListener('beforeprint', () => { printing = true; render(); });
+window.addEventListener('afterprint', () => { printing = false; render(); });
+
+// ---------- misc ----------
+let toastT, undoFn;
+function toast(text, undo){
+  f('toastMsg').textContent = text; undoFn = undo; f('toastUndo').style.display = undo ? '' : 'none';
+  f('toast').classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=>f('toast').classList.remove('on'), 5000);
+}
+f('toastUndo').onclick = () => { if (undoFn) undoFn(); f('toast').classList.remove('on'); };
+function closeAll(){ document.querySelectorAll('.scrim').forEach(s => s.classList.remove('on')); f('lsFt').style.display=''; }
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = closeAll);
+document.querySelectorAll('.scrim').forEach(s => s.addEventListener('mousedown', e => { if (e.target === s) closeAll(); }));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ closeAll(); return; }
+  if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'f'){ e.preventDefault(); q.focus(); return; }
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.activeElement.isContentEditable;
+  if (typing || document.querySelector('.scrim.on')) return;
+  if (e.key === 'ArrowLeft') go(-1); else if (e.key === 'ArrowRight') go(1); else if (e.key.toLowerCase() === 't') f('todayBtn').click();
+});
+const standalone = window.matchMedia('(display-mode: standalone)').matches;
+if (!store.installSeen && !standalone) f('install').classList.add('on');
+let deferredInstall = window.__bip; if (deferredInstall) f('instGo').hidden = false;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; f('instGo').hidden = false; });
+f('instGo').onclick = async () => { if (!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; store.installSeen = true; save(); f('install').classList.remove('on'); };
+checkVersion();
+f('instClose').onclick = () => { store.installSeen = true; save(); f('install').classList.remove('on'); };
+// ---------- 공지 · 업데이트 안내 ----------
+function renderNotices(){
+  const box = f('nbar'); box.innerHTML = '';
+  store.hiddenNotices ||= {};
+  (SEED.notices||[]).filter(n => n.title && (!n.start || n.start <= TODAY) && (!n.end || n.end >= TODAY) && !store.hiddenNotices[n.id]).forEach(n => {
+    const d = document.createElement('div'); d.className = 'nb' + (n.important ? ' imp' : '');
+    d.innerHTML = `<b>${n.important ? '중요' : '공지'}</b><span></span>` + (n.body ? '<button data-more>자세히</button>' : '') + '<button data-hide title="다시 보지 않기">닫기 ✕</button>';
+    d.querySelector('span').textContent = n.title;
+    const more = d.querySelector('[data-more]');
+    if (more) more.onclick = () => { f('ntTitle').firstChild.textContent = n.title; f('ntBody').textContent = n.body; closeAll(); f('ntScrim').classList.add('on'); };
+    d.querySelector('[data-hide]').onclick = () => { store.hiddenNotices[n.id] = 1; save(); renderNotices(); };
+    box.appendChild(d);
+  });
+}
+function checkVersion(){
+  if (!LIVE) return;
+  if (!store.seenVersion){ store.seenVersion = SEED.version; save(); return; }
+  if (store.seenVersion === SEED.version) return;
+  const cl = SEED.changelog || []; const i = cl.findIndex(c => c.version === store.seenVersion);
+  const logs = (i >= 0 ? cl.slice(i+1) : cl.slice(-3)).slice(-5);
+  f('updVer').textContent = `버전 ${store.seenVersion} → ${SEED.version}`;
+  f('updBody').textContent = logs.length ? logs.map(c => `[${c.version}${c.date ? ' · '+c.date : ''}]\n${c.summary||'세부 안내 없음'}`).join('\n\n') : '원본 일정이 갱신되었습니다.';
+  f('updScrim').classList.add('on');
+  store.seenVersion = SEED.version; save();
+}
+renderNotices();
+window.addEventListener('resize', () => { clearTimeout(window._rz); window._rz = setTimeout(render, 150); });
+render();
+}
+(async function boot(){
+  let d = JSON.parse(document.getElementById('seed').textContent), live = false;
+  try { const r = await fetch('data/default-tasks.json', {cache:'no-cache'}); if (r.ok){ const j = await r.json(); if (j && j.tasks && j.months){ d = j; live = true; } } } catch(e){}
+  d.notices ||= []; d.changelog ||= [];
+  start(d, live);
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
